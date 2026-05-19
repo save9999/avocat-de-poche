@@ -12,7 +12,36 @@ import {
 } from "./ScaleIcon";
 import lawsData from "@/data/laws.json";
 
-type Tab = "letter" | "evidence" | "contacts";
+type Tab = "letter" | "evidence" | "contacts" | "lawyer";
+
+interface SpecialtyResult {
+  specialty: string;
+  label: string;
+  keywords: string[];
+  reason: string;
+}
+
+const SPECIALTY_LINKS: Record<
+  string,
+  { justifit: string; cnbSpecialty: string }
+> = {
+  "droit-penal-mineurs": {
+    justifit: "https://www.justifit.fr/specialite/avocat-droit-penal/",
+    cnbSpecialty: "Droit pénal",
+  },
+  "droit-penal-numerique": {
+    justifit: "https://www.justifit.fr/specialite/avocat-droit-internet/",
+    cnbSpecialty: "Droit des nouvelles technologies",
+  },
+  "droit-education": {
+    justifit: "https://www.justifit.fr/specialite/avocat-droit-administratif/",
+    cnbSpecialty: "Droit public",
+  },
+  "droit-penal-general": {
+    justifit: "https://www.justifit.fr/specialite/avocat-droit-penal/",
+    cnbSpecialty: "Droit pénal",
+  },
+};
 
 interface ActionPlanProps {
   open: boolean;
@@ -26,6 +55,9 @@ export function ActionPlan({ open, onClose, conversation }: ActionPlanProps) {
   const [letterLoading, setLetterLoading] = useState(false);
   const [letterError, setLetterError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [specialty, setSpecialty] = useState<SpecialtyResult | null>(null);
+  const [specialtyLoading, setSpecialtyLoading] = useState(false);
+  const [postalCode, setPostalCode] = useState("");
 
   useEffect(() => {
     if (!open || letter || letterLoading) return;
@@ -62,6 +94,38 @@ export function ActionPlan({ open, onClose, conversation }: ActionPlanProps) {
 
     fetchLetter();
   }, [open, conversation, letter, letterLoading]);
+
+  useEffect(() => {
+    if (!open || activeTab !== "lawyer" || specialty || specialtyLoading) return;
+    if (conversation.length === 0) return;
+
+    const fetchSpecialty = async () => {
+      setSpecialtyLoading(true);
+      try {
+        const res = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            messages: conversation.map((m) => ({
+              role: m.role,
+              content: m.content,
+            })),
+            mode: "specialty",
+          }),
+        });
+        const data = (await res.json()) as SpecialtyResult;
+        if (res.ok && data.specialty) {
+          setSpecialty(data);
+        }
+      } catch {
+        // silent fallback — l'UI affichera les liens génériques
+      } finally {
+        setSpecialtyLoading(false);
+      }
+    };
+
+    fetchSpecialty();
+  }, [open, activeTab, conversation, specialty, specialtyLoading]);
 
   const handleCopy = async () => {
     if (!letter) return;
@@ -123,6 +187,11 @@ export function ActionPlan({ open, onClose, conversation }: ActionPlanProps) {
             onClick={() => setActiveTab("contacts")}
             label="Contacts d'urgence"
           />
+          <TabButton
+            active={activeTab === "lawyer"}
+            onClick={() => setActiveTab("lawyer")}
+            label="Trouver un avocat"
+          />
         </nav>
 
         <div className="scrollbar-thin flex-1 overflow-y-auto px-6 py-6">
@@ -137,6 +206,14 @@ export function ActionPlan({ open, onClose, conversation }: ActionPlanProps) {
           )}
           {activeTab === "evidence" && <EvidenceTab />}
           {activeTab === "contacts" && <ContactsTab />}
+          {activeTab === "lawyer" && (
+            <LawyerTab
+              specialty={specialty}
+              loading={specialtyLoading}
+              postalCode={postalCode}
+              onPostalCodeChange={setPostalCode}
+            />
+          )}
         </div>
       </aside>
     </>
@@ -261,6 +338,191 @@ function EvidenceTab() {
         Faites des copies sur un support externe.
       </div>
     </div>
+  );
+}
+
+function LawyerTab({
+  specialty,
+  loading,
+  postalCode,
+  onPostalCodeChange,
+}: {
+  specialty: SpecialtyResult | null;
+  loading: boolean;
+  postalCode: string;
+  onPostalCodeChange: (v: string) => void;
+}) {
+  const links =
+    (specialty && SPECIALTY_LINKS[specialty.specialty]) ||
+    SPECIALTY_LINKS["droit-penal-mineurs"];
+
+  const cityParam = postalCode.trim()
+    ? `&cp=${encodeURIComponent(postalCode.trim())}`
+    : "";
+  const utm = "utm_source=avocat-de-poche&utm_medium=app&utm_campaign=plan-action";
+
+  const justifitUrl = `${links.justifit}?${utm}${cityParam}`;
+  const cnbUrl = `https://cnb.avocat.fr/fr/annuaire-avocat?specialite=${encodeURIComponent(
+    links.cnbSpecialty
+  )}${postalCode.trim() ? `&ville=${encodeURIComponent(postalCode.trim())}` : ""}`;
+  const ajUrl =
+    "https://www.service-public.fr/particuliers/vosdroits/F18074";
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-xl border border-midnight-100 bg-midnight-50 p-4 text-sm text-midnight-700">
+        Trois voies sérieuses pour consulter un avocat compétent. Aucune
+        recommandation nominative : vous restez libre du choix.
+      </div>
+
+      {loading ? (
+        <div className="flex items-center gap-2 rounded-xl border border-midnight-100 bg-white p-4">
+          <span className="typing-dot"></span>
+          <span className="typing-dot"></span>
+          <span className="typing-dot"></span>
+          <p className="ml-2 text-sm text-midnight-600">
+            Analyse de votre situation pour orienter vers la bonne spécialité...
+          </p>
+        </div>
+      ) : specialty ? (
+        <div className="rounded-xl border border-sage-200 bg-sage-50 p-4">
+          <p className="text-xs font-medium uppercase tracking-wider text-sage-700">
+            Spécialité recommandée
+          </p>
+          <p className="mt-1 font-serif text-lg font-semibold text-midnight-900">
+            {specialty.label}
+          </p>
+          <p className="mt-2 text-sm leading-relaxed text-midnight-700">
+            {specialty.reason}
+          </p>
+          {specialty.keywords?.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {specialty.keywords.map((k) => (
+                <span
+                  key={k}
+                  className="rounded-full bg-white px-2.5 py-1 text-xs text-sage-800 ring-1 ring-sage-200"
+                >
+                  {k}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      ) : null}
+
+      <div className="rounded-xl border border-midnight-100 bg-white p-4">
+        <label
+          htmlFor="postal-code"
+          className="block text-xs font-medium uppercase tracking-wider text-midnight-500"
+        >
+          Code postal (optionnel)
+        </label>
+        <input
+          id="postal-code"
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]{5}"
+          maxLength={5}
+          value={postalCode}
+          onChange={(e) =>
+            onPostalCodeChange(e.target.value.replace(/[^0-9]/g, ""))
+          }
+          placeholder="75001"
+          className="mt-2 w-40 rounded-lg border border-midnight-200 px-3 py-2 text-sm focus:border-sage-500 focus:outline-none focus:ring-2 focus:ring-sage-100"
+        />
+        <p className="mt-2 text-xs text-midnight-500">
+          Si renseigné, les recherches seront pré-filtrées sur votre ville.
+        </p>
+      </div>
+
+      <LawyerCard
+        title="Annuaire officiel des avocats (CNB)"
+        badge="Source officielle"
+        badgeTone="midnight"
+        description="Annuaire du Conseil National des Barreaux. Gratuit, sans intermédiaire, source officielle. Recherche par spécialité et ville."
+        ctaLabel="Ouvrir l'annuaire CNB"
+        href={cnbUrl}
+      />
+      <LawyerCard
+        title="Justifit — mise en relation rapide"
+        badge="Réponse sous 24h"
+        badgeTone="sage"
+        description="Plateforme française qui vous met en relation avec un avocat partenaire selon votre spécialité et votre ville. Premier contact souvent gratuit."
+        ctaLabel="Voir les avocats sur Justifit"
+        href={justifitUrl}
+      />
+      <LawyerCard
+        title="Aide juridictionnelle (revenus modestes)"
+        badge="Service public"
+        badgeTone="amber"
+        description="Si vos revenus sont en dessous des plafonds, l'État prend en charge tout ou partie des honoraires d'avocat. Simulateur officiel et démarche en ligne."
+        ctaLabel="Vérifier mon éligibilité"
+        href={ajUrl}
+      />
+
+      <p className="mt-2 text-xs leading-relaxed text-midnight-500">
+        Avocat de Poche peut percevoir une commission lorsque vous prenez
+        contact via Justifit. Cette commission n'influe pas sur les conseils
+        que vous a donnés l'application.
+      </p>
+    </div>
+  );
+}
+
+function LawyerCard({
+  title,
+  description,
+  badge,
+  badgeTone,
+  ctaLabel,
+  href,
+}: {
+  title: string;
+  description: string;
+  badge: string;
+  badgeTone: "midnight" | "sage" | "amber";
+  ctaLabel: string;
+  href: string;
+}) {
+  const toneClasses: Record<typeof badgeTone, string> = {
+    midnight: "bg-midnight-900 text-white",
+    sage: "bg-sage-700 text-white",
+    amber: "bg-amber-100 text-amber-900 ring-1 ring-amber-200",
+  };
+
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="block rounded-xl border border-midnight-100 bg-white p-5 transition hover:-translate-y-0.5 hover:border-sage-300 hover:shadow-soft"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <h3 className="font-serif text-lg font-semibold text-midnight-900">
+          {title}
+        </h3>
+        <span
+          className={`flex-shrink-0 rounded-full px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider ${toneClasses[badgeTone]}`}
+        >
+          {badge}
+        </span>
+      </div>
+      <p className="mt-2 text-sm leading-relaxed text-midnight-700">
+        {description}
+      </p>
+      <div className="mt-3 inline-flex items-center text-sm font-medium text-sage-700">
+        {ctaLabel}
+        <svg className="ml-1.5 h-4 w-4" viewBox="0 0 24 24" fill="none">
+          <path
+            d="M7 17L17 7M9 7h8v8"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </div>
+    </a>
   );
 }
 

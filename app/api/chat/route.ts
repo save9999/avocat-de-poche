@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
-import { buildSystemPrompt, buildLetterPrompt } from "@/lib/prompts";
+import {
+  buildSystemPrompt,
+  buildLetterPrompt,
+  buildSpecialtyPrompt,
+} from "@/lib/prompts";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -13,7 +17,7 @@ interface ClientMessage {
 
 interface ChatBody {
   messages: ClientMessage[];
-  mode?: "chat" | "letter";
+  mode?: "chat" | "letter" | "specialty";
 }
 
 const MODEL = process.env.ANTHROPIC_MODEL || "claude-3-5-sonnet-20241022";
@@ -81,6 +85,62 @@ export async function POST(req: NextRequest) {
           .join("\n") || "";
 
       return NextResponse.json({ letter });
+    }
+
+    if (mode === "specialty") {
+      const conversationContext = messages
+        .map(
+          (m) =>
+            `${m.role === "user" ? "Utilisateur" : "Avocat de Poche"} : ${m.content}`
+        )
+        .join("\n\n");
+
+      const specialtyResponse = await client.messages.create({
+        model: MODEL,
+        max_tokens: 400,
+        system: buildSpecialtyPrompt(conversationContext),
+        messages: [
+          {
+            role: "user",
+            content:
+              "Analyse la conversation et renvoie la spécialité au format JSON.",
+          },
+        ],
+      });
+
+      const raw =
+        specialtyResponse.content
+          .filter((block): block is Anthropic.TextBlock => block.type === "text")
+          .map((block) => block.text)
+          .join("\n") || "";
+
+      const jsonMatch = raw.match(/\{[\s\S]*\}/);
+      let parsed: {
+        specialty: string;
+        label: string;
+        keywords: string[];
+        reason: string;
+      } | null = null;
+
+      if (jsonMatch) {
+        try {
+          parsed = JSON.parse(jsonMatch[0]);
+        } catch {
+          parsed = null;
+        }
+      }
+
+      if (!parsed) {
+        parsed = {
+          specialty: "droit-penal-mineurs",
+          label: "Droit pénal des mineurs",
+          keywords: ["harcèlement scolaire", "mineur"],
+          reason:
+            "Orientation par défaut : harcèlement scolaire impliquant le plus souvent une victime mineure.",
+        };
+      }
+
+      return NextResponse.json(parsed);
     }
 
     const conversation: Anthropic.MessageParam[] = messages.map((m) => ({

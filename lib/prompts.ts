@@ -79,3 +79,26 @@ Contraintes du modèle :
 
 Ne renvoie QUE le contenu de la lettre en markdown, sans préambule ni commentaire de ta part.`;
 }
+
+export function buildSpecialtyPrompt(conversationContext: string): string {
+  return `Tu es un assistant chargé d'orienter une victime de harcèlement scolaire vers le bon type d'avocat.
+
+À partir de la conversation ci-dessous, identifie LA spécialité juridique la plus pertinente parmi :
+- "droit-penal-mineurs" : si la victime est mineure (la majorité des cas), violences physiques, menaces, intimidation hors ligne
+- "droit-penal-numerique" : si la dimension cyberharcèlement domine (réseaux sociaux, messageries, images intimes, doxxing)
+- "droit-education" : si le litige porte principalement sur la responsabilité de l'établissement (absence de signalement, négligence administrative, exclusion scolaire)
+- "droit-penal-general" : pour adulte victime ou cas ne rentrant pas dans les autres catégories
+
+Conversation :
+"""
+${conversationContext}
+"""
+
+Réponds STRICTEMENT au format JSON suivant, sans aucun texte autour :
+{
+  "specialty": "<une des 4 valeurs ci-dessus>",
+  "label": "<label humain en français, ex: 'Droit pénal des mineurs'>",
+  "keywords": ["<2 à 4 mots-clefs utiles pour la recherche, ex: 'cyberharcèlement', 'mineur'>"],
+  "reason": "<une phrase qui justifie ce choix à partir d'éléments concrets de la conversation>"
+}`;
+}
