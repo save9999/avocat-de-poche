@@ -1,0 +1,192 @@
+{
+  "domain": "Harcèlement scolaire en droit français",
+  "lastUpdate": "2024-01-15",
+  "sources": [
+    "Code pénal (Légifrance)",
+    "Code de l'éducation (Légifrance)",
+    "Loi n° 2022-299 du 2 mars 2022 visant à combattre le harcèlement scolaire"
+  ],
+  "definitions": {
+    "harcelementScolaire": "Le harcèlement scolaire désigne des violences répétées (verbales, physiques, psychologiques ou via internet) commises dans le cadre scolaire ou universitaire, entraînant chez la victime une dégradation de ses conditions de vie, une altération de sa santé physique ou mentale, ou un impact sur son parcours scolaire.",
+    "cyberharcelement": "Forme de harcèlement utilisant les outils numériques (réseaux sociaux, messageries, jeux en ligne). Aggravé lorsqu'il s'exerce via un service de communication au public en ligne."
+  },
+  "articles": [
+    {
+      "code": "Code pénal",
+      "reference": "Article 222-33-2-3",
+      "titre": "Délit de harcèlement scolaire",
+      "texte": "Les faits de harcèlement moral mentionnés aux quatre premiers alinéas de l'article 222-33-2-2 sont constitutifs de harcèlement scolaire lorsqu'ils sont commis au sein d'un établissement d'enseignement scolaire ou supérieur, à ses abords, ou dans le cadre des activités qui en sont le prolongement, par une personne étudiant ou exerçant une activité professionnelle au sein du même établissement. Ces faits sont punis : 1° De trois ans d'emprisonnement et de 45 000 euros d'amende lorsqu'ils ont causé une incapacité totale de travail inférieure ou égale à huit jours ou n'ont entraîné aucune incapacité de travail ; 2° De cinq ans d'emprisonnement et de 75 000 euros d'amende lorsqu'ils ont causé une incapacité totale de travail supérieure à huit jours ; 3° De dix ans d'emprisonnement et de 150 000 euros d'amende lorsqu'ils ont conduit la victime à se suicider ou à tenter de se suicider.",
+      "motsClefs": ["harcèlement", "école", "établissement", "élève", "professeur"],
+      "vulgarisation": "Depuis la loi du 2 mars 2022, le harcèlement scolaire est un délit pénal autonome. Il s'applique aux faits commis à l'école, à proximité, ou lors de sorties scolaires. Les peines sont aggravées lorsque les conséquences sur la victime sont graves (ITT, tentative de suicide)."
+    },
+    {
+      "code": "Code pénal",
+      "reference": "Article 222-33-2-2",
+      "titre": "Harcèlement moral",
+      "texte": "Le fait de harceler une personne par des propos ou comportements répétés ayant pour objet ou pour effet une dégradation de ses conditions de vie se traduisant par une altération de sa santé physique ou mentale est puni d'un an d'emprisonnement et de 15 000 € d'amende lorsque ces faits ont causé une incapacité totale de travail inférieure ou égale à huit jours ou n'ont entraîné aucune incapacité de travail. L'infraction est constituée même si l'auteur des faits n'a pas agi de manière répétée, dès lors que ces propos ou comportements sont imposés à une même victime par plusieurs personnes, de manière concertée ou à l'instigation de l'une d'elles, alors même que chacune de ces personnes n'a pas agi de façon répétée. L'infraction est également constituée même si l'auteur des faits n'a pas agi de manière répétée, dès lors que ces propos ou comportements sont imposés à une même victime, successivement, par plusieurs personnes qui, même en l'absence de concertation, savaient que ces propos ou comportements caractérisaient une répétition. Les faits mentionnés aux trois premiers alinéas sont punis de deux ans d'emprisonnement et de 30 000 € d'amende : 1° Lorsqu'ils ont causé une incapacité totale de travail supérieure à huit jours ; 2° Lorsqu'ils ont été commis sur un mineur de quinze ans ; 3° Lorsqu'ils ont été commis sur une personne dont la particulière vulnérabilité, due à son âge, à une maladie, à une infirmité, à une déficience physique ou psychique ou à un état de grossesse, est apparente ou connue de leur auteur ; 4° Lorsqu'ils ont été commis par l'utilisation d'un service de communication au public en ligne ou par le biais d'un support numérique ou électronique ; 5° Lorsqu'un mineur était présent et y a assisté ; 6° Lorsqu'ils ont été commis par le conjoint ou le concubin de la victime ou le partenaire lié à la victime par un pacte civil de solidarité.",
+      "motsClefs": ["harcèlement moral", "répétition", "cyberharcèlement", "mineur"],
+      "vulgarisation": "Cet article est la base juridique du harcèlement. Important : la loi prévoit le 'harcèlement de meute' — chaque participant est responsable même s'il n'a agi qu'une fois, dès lors qu'il savait que d'autres harcelaient la même victime. Le cyberharcèlement et le harcèlement d'un mineur de 15 ans sont des circonstances aggravantes."
+    },
+    {
+      "code": "Code pénal",
+      "reference": "Article 222-33-2-1",
+      "titre": "Harcèlement au sein du couple (cité pour le cadre général)",
+      "texte": "Le fait de harceler son conjoint, son partenaire lié par un pacte civil de solidarité ou son concubin par des propos ou comportements répétés ayant pour objet ou pour effet une dégradation de ses conditions de vie se traduisant par une altération de sa santé physique ou mentale est puni de trois ans d'emprisonnement et de 45 000 € d'amende lorsque ces faits ont causé une incapacité totale de travail inférieure ou égale à huit jours ou n'ont entraîné aucune incapacité de travail et de cinq ans d'emprisonnement et de 75 000 € d'amende lorsqu'ils ont causé une incapacité totale de travail supérieure à huit jours ou ont été commis alors qu'un mineur était présent et y a assisté.",
+      "motsClefs": ["harcèlement conjugal"],
+      "vulgarisation": "Article cité à titre de référence dans le dispositif global de lutte contre le harcèlement. Ne s'applique pas au cadre scolaire."
+    },
+    {
+      "code": "Code pénal",
+      "reference": "Article 222-14-3",
+      "titre": "Violences psychologiques",
+      "texte": "Les violences prévues par les dispositions de la présente section sont réprimées quelle que soit leur nature, y compris s'il s'agit de violences psychologiques.",
+      "motsClefs": ["violences psychologiques"],
+      "vulgarisation": "Confirme que les violences psychologiques (insultes, humiliations, menaces répétées) sont punies au même titre que les violences physiques."
+    },
+    {
+      "code": "Code pénal",
+      "reference": "Article R624-2",
+      "titre": "Diffamation non publique",
+      "texte": "La diffamation non publique envers une personne est punie de l'amende prévue pour les contraventions de la 1re classe. La diffamation est l'allégation ou l'imputation d'un fait qui porte atteinte à l'honneur ou à la considération de la personne ou du corps auquel le fait est imputé.",
+      "motsClefs": ["diffamation", "rumeurs"],
+      "vulgarisation": "Si des élèves font courir des rumeurs portant atteinte à la réputation de la victime, cela peut relever de la diffamation, en plus du harcèlement."
+    },
+    {
+      "code": "Code pénal",
+      "reference": "Article R621-2",
+      "titre": "Injure non publique",
+      "texte": "L'injure non publique envers une personne, lorsqu'elle n'a pas été précédée de provocation, est punie de l'amende prévue pour les contraventions de la 1re classe. L'injure est toute expression outrageante, terme de mépris ou invective qui ne renferme l'imputation d'aucun fait.",
+      "motsClefs": ["injure", "insultes"],
+      "vulgarisation": "Les insultes proférées en groupe restreint (couloir, cour) constituent une injure non publique. Si elles sont publiées en ligne (réseaux sociaux publics), l'injure devient publique et les peines sont aggravées."
+    },
+    {
+      "code": "Code pénal",
+      "reference": "Article 226-1",
+      "titre": "Atteinte à la vie privée — enregistrement non autorisé",
+      "texte": "Est puni d'un an d'emprisonnement et de 45 000 euros d'amende le fait, au moyen d'un procédé quelconque, volontairement de porter atteinte à l'intimité de la vie privée d'autrui : 1° En captant, enregistrant ou transmettant, sans le consentement de leur auteur, des paroles prononcées à titre privé ou confidentiel ; 2° En fixant, enregistrant ou transmettant, sans le consentement de celle-ci, l'image d'une personne se trouvant dans un lieu privé.",
+      "motsClefs": ["vidéo", "enregistrement", "intimité"],
+      "vulgarisation": "Filmer un élève dans les vestiaires, les toilettes, ou capter ses paroles à son insu est puni. Diffuser ces images en ligne ajoute des infractions supplémentaires."
+    },
+    {
+      "code": "Code pénal",
+      "reference": "Article 226-2-1",
+      "titre": "Diffusion d'images à caractère sexuel sans consentement",
+      "texte": "Lorsque les délits prévus aux articles 226-1 et 226-2 portent sur des paroles ou des images présentant un caractère sexuel prises dans un lieu public ou privé, les peines sont portées à deux ans d'emprisonnement et à 60 000 € d'amende. Est puni des mêmes peines le fait, en l'absence d'accord de la personne pour la diffusion, de porter à la connaissance du public ou d'un tiers tout enregistrement ou tout document portant sur des paroles ou des images présentant un caractère sexuel, obtenu, avec le consentement exprès ou présumé de la personne ou par elle-même, à l'aide de l'un des actes prévus à l'article 226-1.",
+      "motsClefs": ["nudes", "revenge porn", "images intimes"],
+      "vulgarisation": "Diffuser sans accord des photos ou vidéos intimes d'une personne — même si elle les avait envoyées librement — est un délit puni de 2 ans de prison."
+    },
+    {
+      "code": "Code pénal",
+      "reference": "Article 222-13",
+      "titre": "Violences volontaires",
+      "texte": "Les violences ayant entraîné une incapacité de travail inférieure ou égale à huit jours ou n'ayant entraîné aucune incapacité de travail sont punies de trois ans d'emprisonnement et de 45 000 euros d'amende lorsqu'elles sont commises : (...) sur un mineur de quinze ans ; (...) dans les établissements d'enseignement ou d'éducation ou dans les locaux de l'administration, ainsi que, lors des entrées ou sorties des élèves ou du public ou dans un temps très voisin de celles-ci, aux abords de ces établissements (...).",
+      "motsClefs": ["violences physiques", "coups", "bousculades"],
+      "vulgarisation": "Les coups, gifles, bousculades infligés à un élève sont punis plus sévèrement parce que commis dans le cadre scolaire et souvent sur un mineur."
+    },
+    {
+      "code": "Code pénal",
+      "reference": "Article 322-1",
+      "titre": "Destruction, dégradation",
+      "texte": "La destruction, la dégradation ou la détérioration d'un bien appartenant à autrui est punie de deux ans d'emprisonnement et de 30 000 euros d'amende, sauf s'il n'en est résulté qu'un dommage léger.",
+      "motsClefs": ["affaires détruites", "cartable", "vêtements abîmés"],
+      "vulgarisation": "Détruire les affaires d'un élève (livres, cartable, vêtements) constitue un délit indépendant du harcèlement, qui s'ajoute aux poursuites."
+    },
+    {
+      "code": "Code de l'éducation",
+      "reference": "Article L511-3-1",
+      "titre": "Droit de tout élève à une scolarité sans harcèlement",
+      "texte": "Aucun élève ne doit subir, de la part d'autres élèves, de faits de harcèlement ayant pour objet ou pour effet une dégradation de ses conditions d'apprentissage susceptible de porter atteinte à ses droits, à sa sécurité ou à sa santé. Les mêmes obligations s'appliquent aux faits de harcèlement commis dans les mêmes conditions par tout membre de la communauté éducative. Les faits de harcèlement mentionnés au premier alinéa, y compris lorsqu'ils sont commis dans l'enceinte de l'établissement scolaire, peuvent être sanctionnés disciplinairement, indépendamment de l'engagement de poursuites pénales.",
+      "motsClefs": ["droit de l'élève", "obligation établissement"],
+      "vulgarisation": "Tout élève a un droit légal à une scolarité sans harcèlement. L'établissement a une obligation de protection et peut sanctionner disciplinairement les auteurs, en plus des poursuites pénales."
+    },
+    {
+      "code": "Code de l'éducation",
+      "reference": "Article L121-1",
+      "titre": "Missions du service public d'éducation",
+      "texte": "Les écoles, les collèges, les lycées et les établissements d'enseignement supérieur (...) contribuent à favoriser la mixité et l'égalité entre les hommes et les femmes, notamment en matière d'orientation, ainsi qu'à la prévention et à la résolution non violente des conflits. Ils dispensent une formation à la prévention des violences, et notamment des violences sexuelles et sexistes, ainsi qu'à la prévention du harcèlement scolaire.",
+      "motsClefs": ["mission école", "prévention"],
+      "vulgarisation": "La prévention du harcèlement fait partie des missions légales de l'école. Un établissement qui ne forme pas son personnel et ne sensibilise pas les élèves manque à ses obligations."
+    },
+    {
+      "code": "Code de l'éducation",
+      "reference": "Article L401-2-1",
+      "titre": "Programme de lutte contre le harcèlement",
+      "texte": "Chaque école et chaque établissement d'enseignement scolaire élaborent un programme de lutte contre toutes les formes de harcèlement, en particulier le harcèlement à caractère sexiste, sexuel et celui fondé sur l'orientation sexuelle, dont le contenu est fixé par décret. Ce programme est intégré au projet d'école ou d'établissement et présenté chaque année devant les instances de l'école ou de l'établissement.",
+      "motsClefs": ["programme", "projet d'établissement"],
+      "vulgarisation": "Chaque école et collège doit avoir un programme de lutte contre le harcèlement, intégré dans son projet d'établissement et présenté annuellement. Vous pouvez en demander une copie au directeur."
+    },
+    {
+      "code": "Code de l'éducation",
+      "reference": "Article L131-1",
+      "titre": "Obligation scolaire",
+      "texte": "L'instruction est obligatoire pour chaque enfant dès l'âge de trois ans et jusqu'à l'âge de seize ans révolus.",
+      "motsClefs": ["instruction obligatoire", "déscolarisation"],
+      "vulgarisation": "L'instruction est obligatoire. Si un enfant est déscolarisé à cause du harcèlement, l'établissement doit proposer des solutions : changement d'établissement facilité, instruction à domicile, etc."
+    },
+    {
+      "code": "Code de l'éducation",
+      "reference": "Article D111-12 et suivants",
+      "titre": "Protocole de signalement",
+      "texte": "Lorsqu'un élève signale ou semble être victime de harcèlement, le chef d'établissement doit immédiatement déclencher un protocole comprenant : un entretien avec la victime, un entretien avec les témoins, une rencontre avec les présumés auteurs, une information aux représentants légaux, et le cas échéant un signalement au procureur de la République (article 40 du Code de procédure pénale).",
+      "motsClefs": ["signalement", "protocole", "directeur"],
+      "vulgarisation": "Dès qu'un cas est signalé, le chef d'établissement doit appliquer un protocole précis. Vous pouvez exiger qu'il soit déclenché par écrit et en garder une trace."
+    },
+    {
+      "code": "Code de procédure pénale",
+      "reference": "Article 40",
+      "titre": "Obligation de signalement par les autorités",
+      "texte": "Toute autorité constituée, tout officier public ou fonctionnaire qui, dans l'exercice de ses fonctions, acquiert la connaissance d'un crime ou d'un délit est tenu d'en donner avis sans délai au procureur de la République et de transmettre à ce magistrat tous les renseignements, procès-verbaux et actes qui y sont relatifs.",
+      "motsClefs": ["signalement procureur", "fonctionnaire"],
+      "vulgarisation": "Les directeurs d'école, professeurs et CPE (qui sont des fonctionnaires) ont l'obligation légale de signaler au procureur tout fait de harcèlement scolaire dont ils ont connaissance. Le défaut de signalement peut engager leur responsabilité."
+    }
+  ],
+  "contacts": [
+    {
+      "nom": "3018",
+      "description": "Numéro national contre les violences numériques (cyberharcèlement, revenge porn, comptes piratés). Gratuit, anonyme, confidentiel. 7j/7.",
+      "horaires": "9h-23h, 7j/7"
+    },
+    {
+      "nom": "3020",
+      "description": "Numéro national 'Non au harcèlement' du Ministère de l'Éducation nationale. Spécialisé harcèlement scolaire. Gratuit, anonyme.",
+      "horaires": "Lundi-vendredi 10h-21h, samedi 9h-18h (hors jours fériés)"
+    },
+    {
+      "nom": "119",
+      "description": "Allô Enfance en Danger. Service national d'écoute et d'intervention pour les enfants en danger ou en risque. Gratuit, 24h/24, 7j/7.",
+      "horaires": "24h/24, 7j/7"
+    },
+    {
+      "nom": "17 / 112",
+      "description": "Police-secours (urgences). À appeler en cas de violences physiques, menaces graves ou danger immédiat.",
+      "horaires": "24h/24"
+    },
+    {
+      "nom": "Pharos",
+      "description": "Plateforme de signalement des contenus illicites en ligne (Ministère de l'Intérieur). À utiliser pour signaler des contenus de cyberharcèlement, menaces, images intimes diffusées.",
+      "horaires": "Plateforme en ligne — internet-signalement.gouv.fr"
+    },
+    {
+      "nom": "Défenseur des droits",
+      "description": "Si l'établissement ne réagit pas après signalement, vous pouvez saisir le Défenseur des droits (institution indépendante).",
+      "horaires": "defenseurdesdroits.fr — 09 69 39 00 00"
+    },
+    {
+      "nom": "France Victimes",
+      "description": "Réseau associatif d'aide aux victimes (juridique, psychologique, social). Trouver l'association près de chez vous.",
+      "horaires": "116 006 — 9h-21h 7j/7 — france-victimes.fr"
+    }
+  ],
+  "preuvesRecommandees": [
+    "Captures d'écran datées et horodatées des messages, posts, photos diffusés en ligne",
+    "Captures d'écran des profils des auteurs au moment des faits (les pseudos changent)",
+    "Journal des faits : tenir un carnet précis (date, heure, lieu, auteurs, témoins, ce qui a été dit ou fait)",
+    "Témoignages écrits, datés et signés de camarades, parents d'élèves ou personnel scolaire",
+    "Certificats médicaux : médecin traitant, psychologue, psychiatre — précisant les retentissements physiques et psychologiques",
+    "Bulletins scolaires montrant une baisse des résultats concomitante aux faits",
+    "Justificatifs d'absences scolaires liées au harcèlement (médecin, refus de l'enfant d'aller à l'école)",
+    "Copies des signalements écrits déjà faits à l'établissement (courriers, mails, comptes-rendus de rendez-vous)",
+    "Vêtements ou affaires endommagées : photographier avant tout nettoyage ou réparation",
+    "Conserver les enregistrements vocaux si l'élève en a (sous réserve des règles sur l'enregistrement)"
+  ]
+}
