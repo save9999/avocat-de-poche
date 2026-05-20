@@ -47,10 +47,23 @@ interface ActionPlanProps {
   open: boolean;
   onClose: () => void;
   conversation: ChatMessageData[];
+  initialTab?: Tab;
 }
 
-export function ActionPlan({ open, onClose, conversation }: ActionPlanProps) {
-  const [activeTab, setActiveTab] = useState<Tab>("letter");
+export function ActionPlan({
+  open,
+  onClose,
+  conversation,
+  initialTab = "letter",
+}: ActionPlanProps) {
+  const [activeTab, setActiveTab] = useState<Tab>(initialTab);
+
+  useEffect(() => {
+    if (open) {
+      setActiveTab(initialTab);
+    }
+  }, [open, initialTab]);
+
   const [letter, setLetter] = useState<string>("");
   const [letterLoading, setLetterLoading] = useState(false);
   const [letterError, setLetterError] = useState<string | null>(null);

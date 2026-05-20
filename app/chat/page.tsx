@@ -10,7 +10,10 @@ import {
 import { ChatInput } from "@/components/ChatInput";
 import { Disclaimer } from "@/components/Disclaimer";
 import { ActionPlan } from "@/components/ActionPlan";
+import { LawyerHandoff } from "@/components/LawyerHandoff";
 import { ScaleIcon } from "@/components/ScaleIcon";
+
+type PlanTab = "letter" | "evidence" | "contacts" | "lawyer";
 
 const INTRO_MESSAGE: ChatMessageData = {
   id: "intro",
@@ -35,6 +38,9 @@ export default function ChatPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [planOpen, setPlanOpen] = useState(false);
+  const [planTab, setPlanTab] = useState<PlanTab>("letter");
+  const [specialtyLabel, setSpecialtyLabel] = useState<string | null>(null);
+  const hasAutoOpenedRef = useRef(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -43,7 +49,8 @@ export default function ChatPage() {
     [messages]
   );
 
-  const canGeneratePlan = userMessageCount >= 2;
+  const canGeneratePlan = userMessageCount >= 1;
+  const showHandoff = userMessageCount >= 1 && !loading;
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -89,6 +96,29 @@ export default function ChatPage() {
         content: data.reply || "(Réponse vide)",
       };
       setMessages((m) => [...m, assistantMsg]);
+
+      if (!hasAutoOpenedRef.current) {
+        hasAutoOpenedRef.current = true;
+        setPlanTab("lawyer");
+        setPlanOpen(true);
+
+        try {
+          const specRes = await fetch("/api/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              messages: [...apiPayload, { role: "assistant", content: assistantMsg.content }],
+              mode: "specialty",
+            }),
+          });
+          if (specRes.ok) {
+            const specData = await specRes.json();
+            if (specData?.label) setSpecialtyLabel(specData.label);
+          }
+        } catch {
+          // pas bloquant — le panneau refera l'appel
+        }
+      }
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Erreur réseau inconnue.";
@@ -135,7 +165,10 @@ export default function ChatPage() {
         </div>
 
         <button
-          onClick={() => setPlanOpen(true)}
+          onClick={() => {
+            setPlanTab("lawyer");
+            setPlanOpen(true);
+          }}
           disabled={!canGeneratePlan}
           className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition ${
             canGeneratePlan
@@ -144,8 +177,8 @@ export default function ChatPage() {
           }`}
           title={
             canGeneratePlan
-              ? "Générer votre plan d'action"
-              : "Échangez quelques messages avant d'ouvrir le plan d'action"
+              ? "Voir les options de mise en relation avec un avocat"
+              : "Posez votre question avant d'accéder au panneau"
           }
         >
           <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none">
@@ -171,6 +204,15 @@ export default function ChatPage() {
             <ChatMessage key={m.id} message={m} />
           ))}
           {loading && <TypingIndicator />}
+          {showHandoff && !planOpen && (
+            <LawyerHandoff
+              specialtyLabel={specialtyLabel}
+              onOpenPlan={() => {
+                setPlanTab("lawyer");
+                setPlanOpen(true);
+              }}
+            />
+          )}
           {error && (
             <div className="fade-in rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
               <strong>Erreur :</strong> {error}
@@ -194,6 +236,7 @@ export default function ChatPage() {
         open={planOpen}
         onClose={() => setPlanOpen(false)}
         conversation={messages.filter((m) => m.id !== "intro")}
+        initialTab={planTab}
       />
     </div>
   );
