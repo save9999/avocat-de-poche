@@ -1,4 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="12" fill="#1e3a8a"/>
-  <text x="32" y="44" font-family="Georgia, serif" font-size="32" font-weight="700" fill="#ffffff" text-anchor="middle" letter-spacing="-1">A</text>
+  <defs>
+    <linearGradient id="legal" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1e3a8a"/>
+      <stop offset="100%" stop-color="#0c1e4d"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#legal)"/>
+  <rect x="31" y="12" width="2" height="36" fill="#fbbf24"/>
+  <rect x="22" y="18" width="20" height="2" fill="#fbbf24"/>
+  <path d="M14 24 L22 24 L18 36 Z" fill="none" stroke="#fbbf24" stroke-width="1.8" stroke-linejoin="round"/>
+  <path d="M42 24 L50 24 L46 36 Z" fill="none" stroke="#fbbf24" stroke-width="1.8" stroke-linejoin="round"/>
+  <rect x="26" y="46" width="12" height="3" fill="#fbbf24"/>
+  <rect x="24" y="49" width="16" height="3" fill="#fbbf24"/>
 </svg>
