@@ -2,6 +2,38 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── A11y : reduce-motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ── A11y : focus-visible ring fort ── */
+:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* ── A11y : taille texte minimum 16px body ── */
+@layer base {
+  html {
+    font-size: 16px;
+  }
+}
+
+/* ── A11y : zoom 200% — pas de scroll horizontal ── */
+@media (max-width: 600px) {
+  html {
+    overflow-x: hidden;
+  }
+}
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Cormorant+Garamond:wght@500;600;700&display=swap');
 
 :root {

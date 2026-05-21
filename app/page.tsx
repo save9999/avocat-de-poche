@@ -93,15 +93,19 @@ function FaqItem({ question, answer }: FaqItemProps) {
 
 export default function LandingPage() {
   return (
-    <main className="min-h-screen bg-gradient-to-b from-midnight-50 via-white to-midnight-50">
+    <main id="main-content" className="min-h-screen bg-gradient-to-b from-midnight-50 via-white to-midnight-50" tabIndex={-1}>
 
       {/* ── Bandeau urgence ── */}
-      <div className="border-b border-red-100 bg-red-50 px-4 py-2.5 text-center text-xs text-red-800">
+      <div
+        className="border-b border-red-100 bg-red-50 px-4 py-2.5 text-center text-sm text-red-800"
+        role="alert"
+        aria-label="Numéros d'urgence"
+      >
         <strong>Urgence ?</strong>{" "}
         Appelez le{" "}
-        <a href="tel:3018" className="font-bold underline hover:text-red-900">3018</a>{" "}
+        <a href="tel:3018" className="font-bold underline hover:text-red-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 rounded" aria-label="Appeler le 3018 Net Écoute cyberharcèlement gratuit 24h sur 24">3018</a>{" "}
         (Net Écoute, gratuit 24h/24) ou le{" "}
-        <a href="tel:119" className="font-bold underline hover:text-red-900">119</a>{" "}
+        <a href="tel:119" className="font-bold underline hover:text-red-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 rounded" aria-label="Appeler le 119 Allô Enfance en Danger gratuit 24h sur 24">119</a>{" "}
         (Allô Enfance en Danger)
       </div>
 
@@ -109,7 +113,7 @@ export default function LandingPage() {
       <header className="border-b border-midnight-100 bg-white/80 backdrop-blur-sm">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-midnight-900 text-white">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-midnight-900 text-white" aria-hidden="true">
               <ScaleIcon className="h-5 w-5" />
             </div>
             <div>
@@ -121,20 +125,20 @@ export default function LandingPage() {
               </p>
             </div>
           </div>
-          <nav className="hidden items-center gap-6 sm:flex">
-            <a href="#comment-ca-marche" className="text-sm text-midnight-600 hover:text-midnight-900">
+          <nav className="hidden items-center gap-6 sm:flex" aria-label="Navigation principale">
+            <a href="#comment-ca-marche" className="text-sm text-midnight-600 hover:text-midnight-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded">
               Comment ça marche
             </a>
-            <a href="#situations" className="text-sm text-midnight-600 hover:text-midnight-900">
+            <a href="#situations" className="text-sm text-midnight-600 hover:text-midnight-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded">
               Situations
             </a>
-            <a href="#faq" className="text-sm text-midnight-600 hover:text-midnight-900">
+            <a href="#faq" className="text-sm text-midnight-600 hover:text-midnight-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded">
               FAQ
             </a>
           </nav>
           <Link
             href="/chat"
-            className="rounded-xl bg-midnight-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-midnight-800"
+            className="rounded-xl bg-midnight-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-midnight-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
           >
             Poser une question
           </Link>
@@ -142,13 +146,13 @@ export default function LandingPage() {
       </header>
 
       {/* ── Hero ── */}
-      <section className="mx-auto max-w-5xl px-6 pb-16 pt-16 text-center sm:pt-24">
+      <section aria-labelledby="hero-title" className="mx-auto max-w-5xl px-6 pb-16 pt-16 text-center sm:pt-24">
         <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-medium uppercase tracking-wider text-blue-700">
           <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
           Gratuit · Disponible 24h/24 · Droit français
         </span>
 
-        <h1 className="mt-6 font-serif text-4xl font-semibold leading-tight text-midnight-900 sm:text-5xl">
+        <h1 id="hero-title" className="mt-6 font-serif text-4xl font-semibold leading-tight text-midnight-900 sm:text-5xl">
           Vous n'êtes pas seuls.
           <br />
           <span className="text-blue-700">Comprenez vos droits, passez à l'action.</span>
@@ -190,38 +194,44 @@ export default function LandingPage() {
       </section>
 
       {/* ── Numéros d'urgence ── */}
-      <section className="mx-auto max-w-5xl px-6 pb-16">
+      <section aria-labelledby="urgences-title" className="mx-auto max-w-5xl px-6 pb-16">
         <div className="rounded-3xl border border-red-100 bg-gradient-to-br from-red-50 to-orange-50 p-8">
           <div className="mb-6 text-center">
-            <h2 className="font-serif text-2xl font-semibold text-midnight-900">
+            <h2 id="urgences-title" className="font-serif text-2xl font-semibold text-midnight-900">
               Numéros d'urgence — disponibles maintenant
             </h2>
             <p className="mt-2 text-sm text-midnight-600">
               Si vous ou votre enfant êtes en danger immédiat, contactez ces services gratuitement.
             </p>
           </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3" role="list">
             <a
               href="tel:3018"
-              className="flex flex-col items-center rounded-2xl border border-red-200 bg-white p-5 text-center transition hover:border-red-300 hover:shadow-sm"
+              role="listitem"
+              className="flex flex-col items-center rounded-2xl border border-red-200 bg-white p-5 text-center transition hover:border-red-300 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2"
+              aria-label="Appeler le 3018 Net Écoute — cyberharcèlement, gratuit, disponible 24 heures sur 24"
             >
-              <span className="font-serif text-4xl font-bold text-red-600">3018</span>
+              <span className="font-serif text-4xl font-bold text-red-600" aria-hidden="true">3018</span>
               <span className="mt-2 text-sm font-semibold text-midnight-900">Net Écoute</span>
               <span className="mt-1 text-xs text-midnight-500">Cyberharcèlement · 24h/24 · Gratuit</span>
             </a>
             <a
               href="tel:119"
-              className="flex flex-col items-center rounded-2xl border border-orange-200 bg-white p-5 text-center transition hover:border-orange-300 hover:shadow-sm"
+              role="listitem"
+              className="flex flex-col items-center rounded-2xl border border-orange-200 bg-white p-5 text-center transition hover:border-orange-300 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2"
+              aria-label="Appeler le 119 Allô Enfance en Danger — enfants en danger, gratuit, disponible 24 heures sur 24"
             >
-              <span className="font-serif text-4xl font-bold text-orange-600">119</span>
+              <span className="font-serif text-4xl font-bold text-orange-600" aria-hidden="true">119</span>
               <span className="mt-2 text-sm font-semibold text-midnight-900">Allô Enfance en Danger</span>
               <span className="mt-1 text-xs text-midnight-500">Enfants en danger · 24h/24 · Gratuit</span>
             </a>
             <a
               href="tel:3020"
-              className="flex flex-col items-center rounded-2xl border border-blue-200 bg-white p-5 text-center transition hover:border-blue-300 hover:shadow-sm"
+              role="listitem"
+              className="flex flex-col items-center rounded-2xl border border-blue-200 bg-white p-5 text-center transition hover:border-blue-300 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+              aria-label="Appeler le 3020 ligne nationale harcèlement scolaire — gratuit, du lundi au vendredi"
             >
-              <span className="font-serif text-4xl font-bold text-blue-600">3020</span>
+              <span className="font-serif text-4xl font-bold text-blue-600" aria-hidden="true">3020</span>
               <span className="mt-2 text-sm font-semibold text-midnight-900">Harcèlement Scolaire</span>
               <span className="mt-1 text-xs text-midnight-500">Ligne nationale · Lun–Ven · Gratuit</span>
             </a>
@@ -576,10 +586,10 @@ export default function LandingPage() {
             <div>
               <h4 className="mb-3 text-xs font-semibold uppercase tracking-widest text-midnight-500">Légal</h4>
               <ul className="space-y-2 text-sm">
-                <li><span className="text-midnight-400">Contact : contact@avocatdepoche.fr</span></li>
-                <li><span className="text-midnight-400">Politique de confidentialité</span></li>
-                <li><span className="text-midnight-400">Mentions légales</span></li>
-                <li><span className="text-midnight-400">RGPD — aucune donnée stockée</span></li>
+                <li><a href="mailto:contact@avocatdepoche.fr" className="text-midnight-300 hover:text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white rounded">contact@avocatdepoche.fr</a></li>
+                <li><Link href="/confidentialite" className="text-midnight-300 hover:text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white rounded">Politique de confidentialité</Link></li>
+                <li><Link href="/mentions-legales" className="text-midnight-300 hover:text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white rounded">Mentions légales</Link></li>
+                <li><Link href="/cgu" className="text-midnight-300 hover:text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white rounded">CGU</Link></li>
               </ul>
             </div>
           </div>

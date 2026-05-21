@@ -229,6 +229,15 @@ export default function ChatPage() {
             onSubmit={sendMessage}
             disabled={loading}
           />
+          <p className="mt-2 text-center text-xs text-midnight-400">
+            Cet outil ne remplace pas un avocat.{" "}
+            <Link href="/confidentialite" className="underline hover:text-midnight-600 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500 rounded">
+              Confidentialité
+            </Link>{" "}·{" "}
+            <Link href="/mentions-legales" className="underline hover:text-midnight-600 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-500 rounded">
+              Mentions légales
+            </Link>
+          </p>
         </div>
       </footer>
 
