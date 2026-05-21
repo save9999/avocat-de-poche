@@ -20,7 +20,7 @@ interface ChatBody {
   mode?: "chat" | "letter" | "specialty";
 }
 
-const MODEL = process.env.ANTHROPIC_MODEL || "claude-3-5-sonnet-20241022";
+const MODEL = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-6";
 
 export async function POST(req: NextRequest) {
   if (!process.env.ANTHROPIC_API_KEY) {
