@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
-export const alt = "Avocat de Poche — Information juridique gratuite sur le harcèlement scolaire";
+export const alt = "Avocat de Poche — Information juridique gratuite en droit français";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -21,8 +21,7 @@ export default function Image() {
           fontFamily: "system-ui, sans-serif",
         }}
       >
-        {/* Logo + titre */}
-        <div style={{ display: "flex", alignItems: "center", gap: "20px", marginBottom: "32px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "20px", marginBottom: "28px" }}>
           <div
             style={{
               width: 64,
@@ -38,59 +37,50 @@ export default function Image() {
             ⚖️
           </div>
           <div style={{ display: "flex", flexDirection: "column" }}>
-            <span style={{ color: "white", fontSize: 42, fontWeight: 700, lineHeight: 1.1 }}>
+            <span style={{ color: "white", fontSize: 44, fontWeight: 700, lineHeight: 1.1 }}>
               Avocat de Poche
             </span>
-            <span style={{ color: "#90aed4", fontSize: 18, letterSpacing: "0.15em", textTransform: "uppercase" }}>
-              Information juridique gratuite
+            <span style={{ color: "#90aed4", fontSize: 17, letterSpacing: "0.15em", textTransform: "uppercase" }}>
+              Information juridique · Gratuit
             </span>
           </div>
         </div>
 
-        {/* Tagline */}
         <p
           style={{
-            color: "#c8d8f0",
-            fontSize: 26,
+            color: "#e6ecf6",
+            fontSize: 30,
             textAlign: "center",
-            maxWidth: 780,
-            lineHeight: 1.5,
-            marginBottom: 48,
+            maxWidth: 880,
+            lineHeight: 1.4,
+            marginBottom: 36,
+            fontWeight: 600,
           }}
         >
-          Harcèlement scolaire — Comprenez vos droits,<br />
-          agissez avec les bons textes de loi. 24h/24, anonyme, gratuit.
+          Vos droits, expliqués simplement.
         </p>
 
-        {/* Numéros urgence */}
-        <div style={{ display: "flex", gap: "24px" }}>
-          {[
-            { num: "3018", label: "Net Écoute", color: "#ef4444" },
-            { num: "119", label: "Enfance en danger", color: "#f97316" },
-            { num: "3020", label: "Harcèlement scolaire", color: "#3b82f6" },
-          ].map((item) => (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", justifyContent: "center", maxWidth: 900 }}>
+          {["Travail", "Logement", "Famille", "Consommation", "Pénal", "Harcèlement scolaire"].map((d) => (
             <div
-              key={item.num}
+              key={d}
               style={{
                 background: "rgba(255,255,255,0.08)",
-                border: "1px solid rgba(255,255,255,0.15)",
-                borderRadius: 16,
-                padding: "16px 24px",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: 4,
+                border: "1px solid rgba(255,255,255,0.18)",
+                borderRadius: 999,
+                padding: "10px 20px",
+                color: "white",
+                fontSize: 18,
+                fontWeight: 500,
               }}
             >
-              <span style={{ color: item.color, fontSize: 36, fontWeight: 800 }}>{item.num}</span>
-              <span style={{ color: "#90aed4", fontSize: 13, textAlign: "center" }}>{item.label}</span>
+              {d}
             </div>
           ))}
         </div>
 
-        {/* URL */}
-        <p style={{ color: "#5a7aad", fontSize: 16, marginTop: 40 }}>
-          avocat-de-poche.vercel.app
+        <p style={{ color: "#5a7aad", fontSize: 16, marginTop: 36 }}>
+          avocat-de-poche.vercel.app · Droit français · Sources Légifrance
         </p>
       </div>
     ),

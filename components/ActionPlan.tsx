@@ -10,7 +10,7 @@ import {
   CopyIcon,
   PhoneIcon,
 } from "./ScaleIcon";
-import lawsData from "@/data/laws.json";
+import { DOMAINS, type DomainId, getDomain } from "@/data/domains";
 
 type Tab = "letter" | "evidence" | "contacts" | "lawyer";
 
@@ -25,22 +25,48 @@ const SPECIALTY_LINKS: Record<
   string,
   { justifit: string; cnbSpecialty: string }
 > = {
+  "droit-penal": {
+    justifit: "https://www.justifit.fr/specialite/avocat-droit-penal/",
+    cnbSpecialty: "Droit pénal",
+  },
   "droit-penal-mineurs": {
     justifit: "https://www.justifit.fr/specialite/avocat-droit-penal/",
     cnbSpecialty: "Droit pénal",
   },
-  "droit-penal-numerique": {
-    justifit: "https://www.justifit.fr/specialite/avocat-droit-internet/",
-    cnbSpecialty: "Droit des nouvelles technologies",
+  "droit-travail": {
+    justifit: "https://www.justifit.fr/specialite/avocat-droit-travail/",
+    cnbSpecialty: "Droit du travail",
   },
-  "droit-education": {
+  "droit-immobilier": {
+    justifit: "https://www.justifit.fr/specialite/avocat-droit-immobilier/",
+    cnbSpecialty: "Droit immobilier",
+  },
+  "droit-famille": {
+    justifit: "https://www.justifit.fr/specialite/avocat-droit-famille/",
+    cnbSpecialty: "Droit de la famille, des personnes et de leur patrimoine",
+  },
+  "droit-consommation": {
+    justifit: "https://www.justifit.fr/specialite/avocat-droit-consommation/",
+    cnbSpecialty: "Droit de la consommation",
+  },
+  "droit-administratif": {
     justifit: "https://www.justifit.fr/specialite/avocat-droit-administratif/",
     cnbSpecialty: "Droit public",
   },
-  "droit-penal-general": {
-    justifit: "https://www.justifit.fr/specialite/avocat-droit-penal/",
-    cnbSpecialty: "Droit pénal",
+  "droit-nouvelles-technologies": {
+    justifit: "https://www.justifit.fr/specialite/avocat-droit-internet/",
+    cnbSpecialty: "Droit des nouvelles technologies",
   },
+};
+
+// Domaine UI → spécialité par défaut si l'IA n'a pas répondu
+const DOMAIN_TO_SPECIALTY: Record<DomainId, keyof typeof SPECIALTY_LINKS> = {
+  "harcelement-scolaire": "droit-penal-mineurs",
+  travail: "droit-travail",
+  logement: "droit-immobilier",
+  consommation: "droit-consommation",
+  famille: "droit-famille",
+  penal: "droit-penal",
 };
 
 interface ActionPlanProps {
@@ -48,20 +74,21 @@ interface ActionPlanProps {
   onClose: () => void;
   conversation: ChatMessageData[];
   initialTab?: Tab;
+  domain: DomainId | null;
 }
 
 export function ActionPlan({
   open,
   onClose,
   conversation,
-  initialTab = "letter",
+  initialTab = "contacts",
+  domain,
 }: ActionPlanProps) {
+  const domainConfig = getDomain(domain);
   const [activeTab, setActiveTab] = useState<Tab>(initialTab);
 
   useEffect(() => {
-    if (open) {
-      setActiveTab(initialTab);
-    }
+    if (open) setActiveTab(initialTab);
   }, [open, initialTab]);
 
   const [letter, setLetter] = useState<string>("");
@@ -72,10 +99,11 @@ export function ActionPlan({
   const [specialtyLoading, setSpecialtyLoading] = useState(false);
   const [postalCode, setPostalCode] = useState("");
 
+  // Génération de la lettre (à la demande, quand l'onglet est ouvert)
   useEffect(() => {
-    if (!open || letter || letterLoading) return;
+    if (!open || activeTab !== "letter") return;
+    if (letter || letterLoading) return;
     if (conversation.length === 0) return;
-
     const fetchLetter = async () => {
       setLetterLoading(true);
       setLetterError(null);
@@ -84,34 +112,28 @@ export function ActionPlan({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            messages: conversation.map((m) => ({
-              role: m.role,
-              content: m.content,
-            })),
+            messages: conversation.map((m) => ({ role: m.role, content: m.content })),
             mode: "letter",
+            domain,
           }),
         });
         const data = await res.json();
-        if (!res.ok) {
-          throw new Error(data.error || "Erreur lors de la génération.");
-        }
+        if (!res.ok) throw new Error(data.error || "Erreur lors de la génération.");
         setLetter(data.letter || "");
       } catch (err) {
-        const message =
-          err instanceof Error ? err.message : "Erreur inconnue.";
-        setLetterError(message);
+        setLetterError(err instanceof Error ? err.message : "Erreur inconnue.");
       } finally {
         setLetterLoading(false);
       }
     };
-
     fetchLetter();
-  }, [open, conversation, letter, letterLoading]);
+  }, [open, activeTab, conversation, letter, letterLoading, domain]);
 
+  // Identification de la spécialité avocat (à la demande)
   useEffect(() => {
-    if (!open || activeTab !== "lawyer" || specialty || specialtyLoading) return;
+    if (!open || activeTab !== "lawyer") return;
+    if (specialty || specialtyLoading) return;
     if (conversation.length === 0) return;
-
     const fetchSpecialty = async () => {
       setSpecialtyLoading(true);
       try {
@@ -119,26 +141,21 @@ export function ActionPlan({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            messages: conversation.map((m) => ({
-              role: m.role,
-              content: m.content,
-            })),
+            messages: conversation.map((m) => ({ role: m.role, content: m.content })),
             mode: "specialty",
+            domain,
           }),
         });
         const data = (await res.json()) as SpecialtyResult;
-        if (res.ok && data.specialty) {
-          setSpecialty(data);
-        }
+        if (res.ok && data.specialty) setSpecialty(data);
       } catch {
-        // silent fallback — l'UI affichera les liens génériques
+        /* silencieux — fallback domain par défaut */
       } finally {
         setSpecialtyLoading(false);
       }
     };
-
     fetchSpecialty();
-  }, [open, activeTab, conversation, specialty, specialtyLoading]);
+  }, [open, activeTab, conversation, specialty, specialtyLoading, domain]);
 
   const handleCopy = async () => {
     if (!letter) return;
@@ -147,7 +164,7 @@ export function ActionPlan({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      setCopied(false);
+      /* noop */
     }
   };
 
@@ -169,15 +186,15 @@ export function ActionPlan({
         <header className="flex items-center justify-between border-b border-midnight-100 px-6 py-4">
           <div>
             <p className="text-xs font-medium uppercase tracking-wider text-sage-700">
-              Plan d'action personnalisé
+              Plan d'action
             </p>
             <h2 className="font-serif text-2xl font-semibold text-midnight-900">
-              Vos prochaines étapes
+              {domainConfig ? domainConfig.label : "Vos prochaines étapes"}
             </h2>
           </div>
           <button
             onClick={onClose}
-            aria-label="Fermer le plan d'action"
+            aria-label="Fermer"
             className="flex h-9 w-9 items-center justify-center rounded-full text-midnight-500 transition hover:bg-midnight-50 hover:text-midnight-900"
           >
             <CloseIcon />
@@ -185,26 +202,10 @@ export function ActionPlan({
         </header>
 
         <nav className="flex border-b border-midnight-100 bg-midnight-50/40 px-6">
-          <TabButton
-            active={activeTab === "letter"}
-            onClick={() => setActiveTab("letter")}
-            label="Modèle de lettre"
-          />
-          <TabButton
-            active={activeTab === "evidence"}
-            onClick={() => setActiveTab("evidence")}
-            label="Checklist des preuves"
-          />
-          <TabButton
-            active={activeTab === "contacts"}
-            onClick={() => setActiveTab("contacts")}
-            label="Contacts d'urgence"
-          />
-          <TabButton
-            active={activeTab === "lawyer"}
-            onClick={() => setActiveTab("lawyer")}
-            label="Trouver un avocat"
-          />
+          <TabButton active={activeTab === "letter"} onClick={() => setActiveTab("letter")} label="Lettre" />
+          <TabButton active={activeTab === "evidence"} onClick={() => setActiveTab("evidence")} label="Preuves" />
+          <TabButton active={activeTab === "contacts"} onClick={() => setActiveTab("contacts")} label="Contacts" />
+          <TabButton active={activeTab === "lawyer"} onClick={() => setActiveTab("lawyer")} label="Avocat" />
         </nav>
 
         <div className="scrollbar-thin flex-1 overflow-y-auto px-6 py-6">
@@ -215,16 +216,18 @@ export function ActionPlan({
               error={letterError}
               copied={copied}
               onCopy={handleCopy}
+              recipient={domainConfig?.letterRecipient ?? "destinataire concerné"}
             />
           )}
-          {activeTab === "evidence" && <EvidenceTab />}
-          {activeTab === "contacts" && <ContactsTab />}
+          {activeTab === "evidence" && <EvidenceTab domain={domain} />}
+          {activeTab === "contacts" && <ContactsTab domain={domain} />}
           {activeTab === "lawyer" && (
             <LawyerTab
               specialty={specialty}
               loading={specialtyLoading}
               postalCode={postalCode}
               onPostalCodeChange={setPostalCode}
+              domain={domain}
             />
           )}
         </div>
@@ -256,18 +259,21 @@ function TabButton({
   );
 }
 
+// ─── Onglet Lettre ────────────────────────────────────────────────────────
 function LetterTab({
   letter,
   loading,
   error,
   copied,
   onCopy,
+  recipient,
 }: {
   letter: string;
   loading: boolean;
   error: string | null;
   copied: boolean;
   onCopy: () => void;
+  recipient: string;
 }) {
   if (loading) {
     return (
@@ -278,12 +284,11 @@ function LetterTab({
           <span className="typing-dot"></span>
         </div>
         <p className="mt-4 text-sm text-midnight-600">
-          Rédaction de votre lettre de signalement personnalisée...
+          Rédaction de votre lettre personnalisée…
         </p>
       </div>
     );
   }
-
   if (error) {
     return (
       <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
@@ -291,15 +296,14 @@ function LetterTab({
       </div>
     );
   }
-
   return (
     <div className="space-y-4">
       <div className="flex items-start justify-between gap-3 rounded-xl border border-sage-200 bg-sage-50 p-4">
         <div className="flex items-start gap-3">
           <ClipboardIcon className="mt-0.5 h-5 w-5 text-sage-700" />
           <p className="text-sm text-sage-900">
-            Lettre de signalement formelle à adresser au chef d'établissement
-            (en LRAR). Complétez les champs entre crochets avant envoi.
+            Lettre adressée au <strong>{recipient}</strong>. À envoyer en lettre
+            recommandée avec accusé de réception. Complétez les champs entre crochets.
           </p>
         </div>
         <button
@@ -324,16 +328,30 @@ function LetterTab({
   );
 }
 
-function EvidenceTab() {
+// ─── Onglet Preuves ───────────────────────────────────────────────────────
+const GENERIC_EVIDENCE = [
+  "Tous les documents écrits relatifs à votre situation (contrats, factures, courriers)",
+  "Échanges écrits (mails, SMS, messageries) — sauvegardés et datés",
+  "Témoignages écrits, datés et signés, avec copie de la pièce d'identité",
+  "Photographies, vidéos, captures d'écran horodatées",
+  "Certificats médicaux ou attestations professionnelles si pertinent",
+  "Tableau chronologique des faits (dates précises, ordre, intervenants)",
+];
+
+function EvidenceTab({ domain }: { domain: DomainId | null }) {
+  const items = domain && DOMAINS[domain]?.evidence
+    ? DOMAINS[domain].evidence
+    : GENERIC_EVIDENCE;
+
   return (
     <div className="space-y-3">
       <div className="rounded-xl border border-midnight-100 bg-midnight-50 p-4 text-sm text-midnight-700">
-        Conservez chacune de ces pièces dans un dossier dédié (papier et
-        numérique). Elles serviront pour le signalement à l'établissement, le
-        dépôt de plainte, et toute procédure ultérieure.
+        Conservez chacune de ces pièces dans un dossier dédié (papier + numérique).
+        Elles serviront pour toute démarche : signalement, mise en demeure, plainte,
+        ou saisine d'une juridiction.
       </div>
       <ul className="space-y-2">
-        {lawsData.preuvesRecommandees.map((item, i) => (
+        {items.map((item, i) => (
           <li
             key={i}
             className="flex items-start gap-3 rounded-xl border border-midnight-100 bg-white p-4 text-sm text-midnight-800"
@@ -345,47 +363,90 @@ function EvidenceTab() {
           </li>
         ))}
       </ul>
-      <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-900">
-        <strong>Conseil :</strong> Datez et nommez vos fichiers de manière
-        systématique (ex : <code>2025-10-12_capture_message_eleveX.png</code>).
-        Faites des copies sur un support externe.
+      <div className="mt-2 rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-900">
+        <strong>Conseil :</strong> Nommez vos fichiers de manière systématique
+        (<code>YYYY-MM-DD_objet.pdf</code>) et faites des copies sur un support externe.
       </div>
     </div>
   );
 }
 
+// ─── Onglet Contacts ──────────────────────────────────────────────────────
+const GENERIC_CONTACTS = [
+  { nom: "39 39", description: "Allô Service Public — renseignements administratifs et juridiques.", horaires: "Lun-Ven 8h30-19h", href: "tel:3939" },
+  { nom: "Défenseur des droits", description: "Institution indépendante (discriminations, services publics, droits des enfants).", horaires: "defenseurdesdroits.fr", href: "https://www.defenseurdesdroits.fr" },
+  { nom: "Conciliateur de justice", description: "Règlement amiable gratuit des litiges du quotidien.", horaires: "conciliateurs.fr", href: "https://www.conciliateurs.fr" },
+  { nom: "116 006", description: "France Victimes — réseau associatif d'aide aux victimes.", horaires: "9h-21h, 7j/7", href: "tel:116006" },
+];
+
+function ContactsTab({ domain }: { domain: DomainId | null }) {
+  const contacts = domain && DOMAINS[domain]?.contacts
+    ? DOMAINS[domain].contacts
+    : GENERIC_CONTACTS;
+
+  return (
+    <div className="space-y-3">
+      {contacts.map((c) => (
+        <a
+          key={c.nom}
+          href={c.href ?? "#"}
+          target={c.href?.startsWith("http") ? "_blank" : undefined}
+          rel={c.href?.startsWith("http") ? "noopener noreferrer" : undefined}
+          className="block rounded-xl border border-midnight-100 bg-white p-4 transition hover:border-sage-300 hover:shadow-sm"
+        >
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-midnight-900 text-white">
+              <PhoneIcon className="h-5 w-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h3 className="font-serif text-lg font-semibold text-midnight-900">{c.nom}</h3>
+              <p className="mt-1 text-sm leading-relaxed text-midnight-700">{c.description}</p>
+              <p className="mt-2 text-xs font-medium uppercase tracking-wider text-sage-700">
+                {c.horaires}
+              </p>
+            </div>
+          </div>
+        </a>
+      ))}
+    </div>
+  );
+}
+
+// ─── Onglet Avocat ────────────────────────────────────────────────────────
 function LawyerTab({
   specialty,
   loading,
   postalCode,
   onPostalCodeChange,
+  domain,
 }: {
   specialty: SpecialtyResult | null;
   loading: boolean;
   postalCode: string;
   onPostalCodeChange: (v: string) => void;
+  domain: DomainId | null;
 }) {
+  // Fallback : si l'IA n'a pas répondu mais qu'on a un domaine, on déduit
+  const resolvedSpecialty =
+    specialty?.specialty ||
+    (domain ? DOMAIN_TO_SPECIALTY[domain] : "droit-penal");
   const links =
-    (specialty && SPECIALTY_LINKS[specialty.specialty]) ||
-    SPECIALTY_LINKS["droit-penal-mineurs"];
+    SPECIALTY_LINKS[resolvedSpecialty] ?? SPECIALTY_LINKS["droit-penal"];
 
   const cityParam = postalCode.trim()
     ? `&cp=${encodeURIComponent(postalCode.trim())}`
     : "";
   const utm = "utm_source=avocat-de-poche&utm_medium=app&utm_campaign=plan-action";
-
   const justifitUrl = `${links.justifit}?${utm}${cityParam}`;
   const cnbUrl = `https://cnb.avocat.fr/fr/annuaire-avocat?specialite=${encodeURIComponent(
     links.cnbSpecialty
   )}${postalCode.trim() ? `&ville=${encodeURIComponent(postalCode.trim())}` : ""}`;
-  const ajUrl =
-    "https://www.service-public.fr/particuliers/vosdroits/F18074";
+  const ajUrl = "https://www.service-public.fr/particuliers/vosdroits/F18074";
 
   return (
     <div className="space-y-4">
       <div className="rounded-xl border border-midnight-100 bg-midnight-50 p-4 text-sm text-midnight-700">
-        Trois voies sérieuses pour consulter un avocat compétent. Aucune
-        recommandation nominative : vous restez libre du choix.
+        Trois voies sérieuses pour consulter un avocat. Aucune recommandation nominative.
       </div>
 
       {loading ? (
@@ -393,22 +454,22 @@ function LawyerTab({
           <span className="typing-dot"></span>
           <span className="typing-dot"></span>
           <span className="typing-dot"></span>
-          <p className="ml-2 text-sm text-midnight-600">
-            Analyse de votre situation pour orienter vers la bonne spécialité...
-          </p>
+          <p className="ml-2 text-sm text-midnight-600">Identification de la spécialité…</p>
         </div>
-      ) : specialty ? (
+      ) : (
         <div className="rounded-xl border border-sage-200 bg-sage-50 p-4">
           <p className="text-xs font-medium uppercase tracking-wider text-sage-700">
             Spécialité recommandée
           </p>
           <p className="mt-1 font-serif text-lg font-semibold text-midnight-900">
-            {specialty.label}
+            {specialty?.label ?? links.cnbSpecialty}
           </p>
-          <p className="mt-2 text-sm leading-relaxed text-midnight-700">
-            {specialty.reason}
-          </p>
-          {specialty.keywords?.length > 0 && (
+          {specialty?.reason && (
+            <p className="mt-2 text-sm leading-relaxed text-midnight-700">
+              {specialty.reason}
+            </p>
+          )}
+          {specialty?.keywords && specialty.keywords.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-2">
               {specialty.keywords.map((k) => (
                 <span
@@ -421,7 +482,7 @@ function LawyerTab({
             </div>
           )}
         </div>
-      ) : null}
+      )}
 
       <div className="rounded-xl border border-midnight-100 bg-white p-4">
         <label
@@ -460,7 +521,7 @@ function LawyerTab({
         title="Justifit — mise en relation rapide"
         badge="Réponse sous 24h"
         badgeTone="sage"
-        description="Plateforme française qui vous met en relation avec un avocat partenaire selon votre spécialité et votre ville. Premier contact souvent gratuit."
+        description="Plateforme française qui vous met en relation avec un avocat partenaire. Premier contact souvent gratuit."
         ctaLabel="Voir les avocats sur Justifit"
         href={justifitUrl}
       />
@@ -468,15 +529,14 @@ function LawyerTab({
         title="Aide juridictionnelle (revenus modestes)"
         badge="Service public"
         badgeTone="amber"
-        description="Si vos revenus sont en dessous des plafonds, l'État prend en charge tout ou partie des honoraires d'avocat. Simulateur officiel et démarche en ligne."
+        description="Si vos revenus sont sous les plafonds, l'État prend en charge tout ou partie des honoraires d'avocat."
         ctaLabel="Vérifier mon éligibilité"
         href={ajUrl}
       />
 
-      <p className="mt-2 text-xs leading-relaxed text-midnight-500">
-        Avocat de Poche peut percevoir une commission lorsque vous prenez
-        contact via Justifit. Cette commission n'influe pas sur les conseils
-        que vous a donnés l'application.
+      <p className="mt-1 text-xs leading-relaxed text-midnight-500">
+        Avocat de Poche peut percevoir une commission lorsque vous prenez contact
+        via Justifit. Cette commission n'influe pas sur les conseils donnés.
       </p>
     </div>
   );
@@ -502,7 +562,6 @@ function LawyerCard({
     sage: "bg-sage-700 text-white",
     amber: "bg-amber-100 text-amber-900 ring-1 ring-amber-200",
   };
-
   return (
     <a
       href={href}
@@ -511,62 +570,20 @@ function LawyerCard({
       className="block rounded-xl border border-midnight-100 bg-white p-5 transition hover:-translate-y-0.5 hover:border-sage-300 hover:shadow-soft"
     >
       <div className="flex items-start justify-between gap-3">
-        <h3 className="font-serif text-lg font-semibold text-midnight-900">
-          {title}
-        </h3>
+        <h3 className="font-serif text-lg font-semibold text-midnight-900">{title}</h3>
         <span
           className={`flex-shrink-0 rounded-full px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider ${toneClasses[badgeTone]}`}
         >
           {badge}
         </span>
       </div>
-      <p className="mt-2 text-sm leading-relaxed text-midnight-700">
-        {description}
-      </p>
+      <p className="mt-2 text-sm leading-relaxed text-midnight-700">{description}</p>
       <div className="mt-3 inline-flex items-center text-sm font-medium text-sage-700">
         {ctaLabel}
         <svg className="ml-1.5 h-4 w-4" viewBox="0 0 24 24" fill="none">
-          <path
-            d="M7 17L17 7M9 7h8v8"
-            stroke="currentColor"
-            strokeWidth="1.6"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
+          <path d="M7 17L17 7M9 7h8v8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </div>
     </a>
-  );
-}
-
-function ContactsTab() {
-  return (
-    <div className="space-y-3">
-      {lawsData.contacts.map((contact) => (
-        <div
-          key={contact.nom}
-          className="rounded-xl border border-midnight-100 bg-white p-4 transition hover:border-sage-300"
-        >
-          <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-midnight-900 text-white">
-              <PhoneIcon className="h-5 w-5" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-baseline justify-between gap-2">
-                <h3 className="font-serif text-lg font-semibold text-midnight-900">
-                  {contact.nom}
-                </h3>
-              </div>
-              <p className="mt-1 text-sm leading-relaxed text-midnight-700">
-                {contact.description}
-              </p>
-              <p className="mt-2 text-xs font-medium uppercase tracking-wider text-sage-700">
-                {contact.horaires}
-              </p>
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
   );
 }

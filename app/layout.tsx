@@ -7,26 +7,28 @@ const BASE_URL = "https://avocat-de-poche.vercel.app";
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
   title: {
-    default: "Avocat de Poche — Information juridique gratuite sur le harcèlement scolaire",
+    default: "Avocat de Poche — Vos droits expliqués simplement (droit français, gratuit)",
     template: "%s | Avocat de Poche",
   },
   description:
-    "Service d'information juridique gratuit sur le harcèlement scolaire. Parents et adolescents : comprenez vos droits, les lois applicables et les démarches à suivre. Numéros d'urgence : 3018, 119, 3020. Disponible 24h/24.",
+    "Information juridique gratuite tous domaines (travail, logement, famille, consommation, pénal, harcèlement scolaire). Articles de loi français cités, plan d'action concret, contacts d'urgence. Gratuit, anonyme, 24h/24.",
   keywords: [
+    "information juridique gratuite",
+    "droit français",
+    "droit du travail",
+    "droit du logement",
+    "droit de la famille",
+    "droit de la consommation",
+    "droit pénal",
     "harcèlement scolaire",
-    "droits harcèlement scolaire",
-    "loi harcèlement scolaire",
-    "aide juridique gratuite",
-    "3018",
-    "119",
-    "3020",
-    "cyberharcèlement",
-    "signalement harcèlement",
-    "recours harcèlement scolaire",
-    "code pénal harcèlement",
-    "protection mineurs",
-    "aide parents harcèlement",
-    "info juridique ados",
+    "licenciement abusif",
+    "dépôt de garantie",
+    "rétractation 14 jours",
+    "pension alimentaire",
+    "divorce",
+    "porter plainte",
+    "aide juridique",
+    "avocat de poche",
   ],
   authors: [{ name: "Avocat de Poche" }],
   creator: "Avocat de Poche",
@@ -35,31 +37,29 @@ export const metadata: Metadata = {
     follow: true,
     googleBot: { index: true, follow: true, "max-image-preview": "large" },
   },
-  alternates: {
-    canonical: BASE_URL,
-  },
+  alternates: { canonical: BASE_URL },
   openGraph: {
     type: "website",
     locale: "fr_FR",
     url: BASE_URL,
     siteName: "Avocat de Poche",
-    title: "Avocat de Poche — Information juridique gratuite sur le harcèlement scolaire",
+    title: "Avocat de Poche — Vos droits expliqués simplement",
     description:
-      "Comprenez vos droits face au harcèlement scolaire. Articles de loi, plan d'action concret, numéros d'urgence (3018, 119). Gratuit, anonyme, 24h/24.",
+      "Information juridique gratuite tous domaines (travail, logement, famille, conso, pénal, harcèlement scolaire). Articles de loi cités, plan d'action concret. 24h/24.",
     images: [
       {
         url: "/opengraph-image",
         width: 1200,
         height: 630,
-        alt: "Avocat de Poche — Information juridique gratuite sur le harcèlement scolaire, numéros 3018 et 119",
+        alt: "Avocat de Poche — Information juridique gratuite en droit français",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Avocat de Poche — Information juridique gratuite sur le harcèlement scolaire",
+    title: "Avocat de Poche — Vos droits expliqués simplement",
     description:
-      "Comprenez vos droits face au harcèlement scolaire. Articles de loi, plan d'action, numéros d'urgence (3018, 119). Gratuit, anonyme, 24h/24.",
+      "Information juridique gratuite tous domaines. Articles de loi cités, plan d'action concret. 24h/24.",
     images: ["/opengraph-image"],
   },
 };
@@ -73,11 +73,11 @@ const jsonLd = {
       url: BASE_URL,
       name: "Avocat de Poche",
       description:
-        "Service d'information juridique gratuit sur le harcèlement scolaire en France",
+        "Service d'information juridique gratuit sur le droit français — tous domaines",
       inLanguage: "fr-FR",
       potentialAction: {
         "@type": "SearchAction",
-        target: `${BASE_URL}/chat`,
+        target: `${BASE_URL}/chat?domain={search_term_string}`,
         "query-input": "required name=search_term_string",
       },
     },
@@ -97,22 +97,17 @@ const jsonLd = {
         contactType: "customer support",
         availableLanguage: "French",
       },
-      sameAs: [],
     },
     {
       "@type": "WebPage",
       "@id": `${BASE_URL}/#webpage`,
       url: BASE_URL,
-      name: "Avocat de Poche — Information juridique gratuite sur le harcèlement scolaire",
+      name: "Avocat de Poche — Vos droits expliqués simplement",
       isPartOf: { "@id": `${BASE_URL}/#website` },
       about: { "@id": `${BASE_URL}/#organization` },
       description:
-        "Service d'information juridique gratuit sur le harcèlement scolaire pour parents et adolescents.",
+        "Information juridique généraliste sur le droit français : travail, logement, famille, consommation, pénal, harcèlement scolaire.",
       inLanguage: "fr-FR",
-      audience: {
-        "@type": "Audience",
-        audienceType: "Parents et adolescents victimes de harcèlement scolaire",
-      },
     },
     {
       "@type": "FAQPage",
@@ -121,18 +116,10 @@ const jsonLd = {
       mainEntity: [
         {
           "@type": "Question",
-          name: "Est-ce vraiment gratuit ?",
+          name: "C'est vraiment gratuit ?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "Oui, entièrement. Aucun abonnement, aucune carte bancaire. L'outil est financé par des dons et des contributions bénévoles. Si vous souhaitez soutenir le projet, une contribution libre est bienvenue mais jamais obligatoire.",
-          },
-        },
-        {
-          "@type": "Question",
-          name: "Mes données sont-elles conservées ?",
-          acceptedAnswer: {
-            "@type": "Answer",
-            text: "Non. Aucun compte n'est requis. Vos messages ne sont ni stockés, ni partagés, ni revendus. La conversation disparaît quand vous fermez la page. Votre vie privée est protégée par défaut.",
+            text: "Oui, entièrement. Aucun compte, aucune carte bancaire. Le projet vit grâce aux dons.",
           },
         },
         {
@@ -140,31 +127,31 @@ const jsonLd = {
           name: "L'outil peut-il remplacer un avocat ?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "Non, et nous le disons clairement. Avocat de Poche est un outil d'information juridique. Il vous aide à comprendre la loi et à vous préparer, mais ne constitue pas une consultation juridique. Si votre situation est grave, nous vous orientons vers des professionnels compétents.",
+            text: "Non. Avocat de Poche fournit une information juridique fondée sur la loi en vigueur. Pour une stratégie personnalisée, un avocat reste indispensable.",
           },
         },
         {
           "@type": "Question",
-          name: "Mon enfant peut-il l'utiliser seul ?",
+          name: "Sur quelle base les articles sont-ils cités ?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "Oui. L'interface est conçue pour être accessible aux adolescents. Le ton est rassurant, les réponses sont en français courant. Il est cependant préférable qu'un adulte accompagne l'enfant pour les démarches concrètes (signalement, dépôt de plainte).",
+            text: "L'outil utilise la base officielle Légifrance / DILA. Une recherche sémantique (RAG) récupère les articles pertinents qui sont ensuite cités avec leur référence exacte.",
           },
         },
         {
           "@type": "Question",
-          name: "Que se passe-t-il si j'ai besoin d'aide immédiate ?",
+          name: "Mes données sont-elles conservées ?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "Si vous ou votre enfant êtes en danger immédiat, appelez le 17 (Police), le 119 (Allô Enfance en Danger) ou le 3018 (Net Écoute pour le cyberharcèlement). Ces numéros sont gratuits et disponibles 24h/24.",
+            text: "Non. Aucun compte n'est requis. Les conversations ne sont ni stockées, ni revendues.",
           },
         },
         {
           "@type": "Question",
-          name: "L'outil couvre-t-il le harcèlement entre adultes à l'école ?",
+          name: "Quels domaines sont couverts ?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "Oui. Si un enseignant, un CPE ou un autre adulte de l'établissement est l'auteur de comportements abusifs envers un élève, l'outil vous informe des recours spécifiques (signalement au rectorat, plainte pénale, etc.).",
+            text: "Six domaines : droit du travail, du logement, de la consommation, de la famille, droit pénal et victimes, harcèlement scolaire.",
           },
         },
       ],

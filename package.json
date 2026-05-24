@@ -1,15 +1,20 @@
 {
   "name": "avocat-de-poche",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "ingest": "tsx scripts/ingest-legifrance.ts",
+    "ingest:dry": "tsx scripts/ingest-legifrance.ts --dry-run",
+    "embed": "tsx scripts/embed-seeds.ts",
+    "download:legi": "bash scripts/download-legi.sh"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.32.1",
+    "@supabase/supabase-js": "^2.45.4",
     "next": "^14.2.35",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -20,8 +25,11 @@
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "autoprefixer": "^10.4.20",
+    "dotenv": "^16.4.5",
+    "fast-xml-parser": "^4.5.0",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.15",
+    "tsx": "^4.19.2",
     "typescript": "^5.6.3"
   }
 }
