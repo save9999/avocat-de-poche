@@ -231,6 +231,8 @@ function ChatPageInner() {
           {loading && <TypingIndicator />}
           {showHandoff && !planOpen && (
             <LawyerHandoff
+              conversation={messages.filter((m) => m.id !== "intro")}
+              domain={domain}
               specialtyLabel={specialtyLabel}
               onOpenPlan={() => {
                 setPlanTab("lawyer");

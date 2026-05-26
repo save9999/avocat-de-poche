@@ -4,8 +4,13 @@ import {
   buildSystemPrompt,
   buildLetterPrompt,
   buildSpecialtyPrompt,
+  buildHandoffPrompt,
 } from "@/lib/prompts";
-import { retrieveArticles, type RetrievedArticle } from "@/lib/rag";
+import {
+  retrieveArticles,
+  formatArticlesForPrompt,
+  type RetrievedArticle,
+} from "@/lib/rag";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -18,7 +23,7 @@ interface ClientMessage {
 
 interface ChatBody {
   messages: ClientMessage[];
-  mode?: "chat" | "letter" | "specialty";
+  mode?: "chat" | "letter" | "specialty" | "handoff";
   domain?: string | null;     // ex: "travail", "famille", "harcelement-scolaire"...
   codeSlug?: string | null;   // optionnel : forcer un code spécifique
 }
@@ -167,6 +172,54 @@ export async function POST(req: NextRequest) {
         };
       }
       return NextResponse.json(parsed);
+    }
+
+    // ─── Mode HANDOFF : dossier pré-analysé pour avocat ───────────────
+    if (mode === "handoff") {
+      const ctx = messages
+        .map((m) => `${m.role === "user" ? "Utilisateur" : "Assistant"} : ${m.content}`)
+        .join("\n\n");
+
+      // On ré-interroge le RAG sur l'ensemble de la conversation utilisateur
+      // pour fournir à la synthèse les articles les plus pertinents.
+      let articles: RetrievedArticle[] = [];
+      try {
+        const query = ragQueryFromMessages(messages) || lastUserMessage(messages) || "";
+        if (query.trim().length > 0) {
+          articles = await retrieveArticles(query, {
+            matchCount: MAX_RAG_ARTICLES,
+            domain,
+            codeSlug,
+          });
+        }
+      } catch (ragErr) {
+        console.warn("[api/chat handoff] RAG indisponible :", (ragErr as Error).message);
+      }
+
+      const out = await client.messages.create({
+        model: MODEL,
+        max_tokens: 1800,
+        system: buildHandoffPrompt(ctx, formatArticlesForPrompt(articles), domain),
+        messages: [
+          { role: "user", content: "Rédige le dossier pré-analysé maintenant." },
+        ],
+      });
+
+      const summary =
+        out.content
+          .filter((b): b is Anthropic.TextBlock => b.type === "text")
+          .map((b) => b.text)
+          .join("\n") || "";
+
+      return NextResponse.json({
+        summary,
+        sources: articles.map((a) => ({
+          reference: a.reference,
+          code: a.code,
+          similarity: a.similarity,
+          url: a.source_url,
+        })),
+      });
     }
 
     return NextResponse.json({ error: "Mode inconnu." }, { status: 400 });
