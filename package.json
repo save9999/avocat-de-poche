@@ -9,12 +9,15 @@
     "lint": "next lint",
     "ingest": "tsx scripts/ingest-legifrance.ts",
     "ingest:dry": "tsx scripts/ingest-legifrance.ts --dry-run",
+    "ingest:hf": "tsx scripts/ingest-hf.ts",
+    "ingest:hf:dry": "tsx scripts/ingest-hf.ts --dry-run",
     "embed": "tsx scripts/embed-seeds.ts",
     "download:legi": "bash scripts/download-legi.sh"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.32.1",
     "@supabase/supabase-js": "^2.45.4",
+    "hyparquet": "^1.26.0",
     "next": "^14.2.35",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
