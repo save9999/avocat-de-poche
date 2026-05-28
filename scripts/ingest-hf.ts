@@ -329,14 +329,17 @@ async function main() {
     const rows = (await parquetReadObjects({ file })) as ParquetRow[];
     console.log(`   ↳ ${rows.length} lignes brutes`);
 
+    const seen = new Set<string>();
     const pending: PendingRow[] = [];
     for (const r of rows) {
       const p = toPendingRow(r, codeSlug, codeLabel);
       if (!p) continue;
+      if (seen.has(p.cid)) continue; // certaines lignes Parquet ont le même cid (versions)
+      seen.add(p.cid);
       pending.push(p);
       if (limit && kept + pending.length >= limit) break;
     }
-    console.log(`   ↳ ${pending.length} VIGUEUR retenues`);
+    console.log(`   ↳ ${pending.length} VIGUEUR retenues (dédupliquées par cid)`);
 
     for (let i = 0; i < pending.length; i += BATCH_UPSERT) {
       const batch = pending.slice(i, i + BATCH_UPSERT);
