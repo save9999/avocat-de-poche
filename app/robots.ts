@@ -6,7 +6,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/api/"],
+        disallow: ["/api/", "/chat"],
       },
     ],
     sitemap: "https://avocat-de-poche.vercel.app/sitemap.xml",

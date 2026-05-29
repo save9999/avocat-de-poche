@@ -4,7 +4,7 @@ import { ScaleIcon } from "@/components/ScaleIcon";
 
 export const metadata: Metadata = {
   title: "Mentions légales",
-  description: "Mentions légales d'Avocat de Poche, service d'information juridique gratuit sur le harcèlement scolaire.",
+  description: "Mentions légales d'Avocat de Poche, service d'information juridique gratuit en droit français (travail, logement, famille, consommation, pénal, harcèlement scolaire).",
   alternates: { canonical: "https://avocat-de-poche.vercel.app/mentions-legales" },
 };
 
