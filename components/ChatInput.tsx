@@ -55,6 +55,7 @@ export function ChatInput({
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           disabled={disabled}
+          aria-label="Décrivez votre situation juridique"
           className="max-h-44 flex-1 resize-none bg-transparent px-3 py-2 text-sm leading-relaxed text-midnight-900 placeholder:text-midnight-400 focus:outline-none disabled:opacity-60 sm:text-base"
         />
         <button

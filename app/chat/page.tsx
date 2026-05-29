@@ -6,6 +6,7 @@ import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import {
   ChatMessage,
   ChatMessageData,
+  ChatSource,
   TypingIndicator,
 } from "@/components/ChatMessage";
 import { ChatInput } from "@/components/ChatInput";
@@ -58,6 +59,7 @@ function ChatPageInner() {
   const hasAutoOpenedRef = useRef(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
+  const lastInputRef = useRef<string>("");
   const userMessageCount = useMemo(
     () => messages.filter((m) => m.role === "user").length,
     [messages]
@@ -90,6 +92,7 @@ function ChatPageInner() {
   const sendMessage = async () => {
     const trimmed = input.trim();
     if (!trimmed || loading) return;
+    lastInputRef.current = trimmed;
     const userMsg: ChatMessageData = { id: generateId(), role: "user", content: trimmed };
     const nextMessages = [...messages, userMsg];
     setMessages(nextMessages);
@@ -110,10 +113,16 @@ function ChatPageInner() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || `Erreur HTTP ${res.status}`);
 
+      const sources: ChatSource[] = Array.isArray(data.sources)
+        ? (data.sources as ChatSource[]).filter(
+            (s) => s && typeof s.reference === "string"
+          )
+        : [];
       const assistantMsg: ChatMessageData = {
         id: generateId(),
         role: "assistant",
         content: data.reply || "(Réponse vide)",
+        sources: sources.length > 0 ? sources : undefined,
       };
       setMessages((m) => [...m, assistantMsg]);
 
@@ -143,7 +152,7 @@ function ChatPageInner() {
   };
 
   return (
-    <div className="flex h-screen flex-col bg-midnight-50">
+    <div className="flex h-[100dvh] flex-col bg-midnight-50">
       <Disclaimer />
 
       {/* ── Header ── */}
@@ -241,35 +250,70 @@ function ChatPageInner() {
             />
           )}
           {/* Exemples si conversation vide */}
-          {domainConfig && userMessageCount === 0 && (
+          {userMessageCount === 0 && (
             <div className="mt-2 rounded-2xl border border-midnight-100 bg-white p-4">
               <p className="mb-2 text-xs font-medium uppercase tracking-wider text-midnight-500">
                 Exemples de questions
               </p>
               <ul className="space-y-1.5">
-                {domainConfig.examples.map((ex) => (
-                  <li key={ex}>
-                    <button
-                      onClick={() => setInput(ex)}
-                      className="text-left text-sm text-midnight-700 hover:text-midnight-900"
-                    >
-                      → {ex}
-                    </button>
-                  </li>
-                ))}
+                {domainConfig
+                  ? domainConfig.examples.map((ex) => (
+                      <li key={ex}>
+                        <button
+                          onClick={() => setInput(ex)}
+                          className="text-left text-sm text-midnight-700 hover:text-midnight-900"
+                        >
+                          → {ex}
+                        </button>
+                      </li>
+                    ))
+                  : [
+                      "Mon employeur ne m'a pas payé ce mois-ci, que puis-je faire ?",
+                      "Mon propriétaire refuse de rendre ma caution, quels sont mes droits ?",
+                      "J'ai reçu une mise en demeure, comment dois-je réagir ?",
+                      "Mon voisin fait du bruit toutes les nuits, quels recours ai-je ?",
+                    ].map((ex) => (
+                      <li key={ex}>
+                        <button
+                          onClick={() => setInput(ex)}
+                          className="text-left text-sm text-midnight-700 hover:text-midnight-900"
+                        >
+                          → {ex}
+                        </button>
+                      </li>
+                    ))}
               </ul>
             </div>
           )}
           {error && (
             <div className="fade-in rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
-              <strong>Erreur :</strong> {error}
+              <p><strong>Erreur :</strong> {error}</p>
+              {lastInputRef.current && (
+                <button
+                  onClick={() => {
+                    // Retire le dernier message utilisateur sans réponse, puis relance
+                    setMessages((prev) => {
+                      const last = [...prev];
+                      if (last.length > 0 && last[last.length - 1].role === "user") {
+                        last.pop();
+                      }
+                      return last;
+                    });
+                    setError(null);
+                    setInput(lastInputRef.current);
+                  }}
+                  className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-red-300 bg-white px-3 py-1.5 text-xs font-medium text-red-700 transition hover:bg-red-50"
+                >
+                  ↺ Réessayer
+                </button>
+              )}
             </div>
           )}
         </div>
       </main>
 
       {/* ── Input ── */}
-      <footer className="border-t border-midnight-100 bg-white px-3 py-4 sm:px-6">
+      <footer className="border-t border-midnight-100 bg-white px-3 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:px-6">
         <div className="mx-auto max-w-3xl">
           <ChatInput
             value={input}
@@ -304,7 +348,7 @@ export default function ChatPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex h-screen items-center justify-center bg-midnight-50">
+        <div className="flex h-[100dvh] items-center justify-center bg-midnight-50">
           <div className="flex gap-1">
             <span className="typing-dot" />
             <span className="typing-dot" />

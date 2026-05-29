@@ -5,10 +5,18 @@ import { ScaleIcon } from "./ScaleIcon";
 
 export type ChatRole = "user" | "assistant";
 
+export interface ChatSource {
+  reference: string;
+  code?: string;
+  similarity?: number;
+  url?: string;
+}
+
 export interface ChatMessageData {
   id: string;
   role: ChatRole;
   content: string;
+  sources?: ChatSource[];
 }
 
 interface ChatMessageProps {
@@ -64,6 +72,30 @@ export function ChatMessage({ message }: ChatMessageProps) {
             >
               {message.content}
             </ReactMarkdown>
+            {message.sources && message.sources.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-1.5 border-t border-midnight-100 pt-2.5">
+                {message.sources.map((src, i) => (
+                  src.url ? (
+                    <a
+                      key={i}
+                      href={src.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 rounded-full border border-sage-200 bg-sage-50 px-2.5 py-1 text-[11px] font-medium text-sage-800 transition hover:bg-sage-100 hover:text-sage-900"
+                    >
+                      {src.reference} →
+                    </a>
+                  ) : (
+                    <span
+                      key={i}
+                      className="inline-flex items-center rounded-full border border-midnight-100 bg-midnight-50 px-2.5 py-1 text-[11px] font-medium text-midnight-600"
+                    >
+                      {src.reference}
+                    </span>
+                  )
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
