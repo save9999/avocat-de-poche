@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { z } from "zod";
 import {
   buildSystemPrompt,
   buildLetterPrompt,
@@ -11,22 +12,43 @@ import {
   formatArticlesForPrompt,
   type RetrievedArticle,
 } from "@/lib/rag";
+import { checkRateLimit } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-type ChatRole = "user" | "assistant";
-interface ClientMessage {
-  role: ChatRole;
-  content: string;
-}
+// ─── Validation Zod ──────────────────────────────────────────────────────────
 
-interface ChatBody {
-  messages: ClientMessage[];
-  mode?: "chat" | "letter" | "specialty" | "handoff";
-  domain?: string | null;     // ex: "travail", "famille", "harcelement-scolaire"...
-  codeSlug?: string | null;   // optionnel : forcer un code spécifique
-}
+const ClientMessageSchema = z.object({
+  role: z.enum(["user", "assistant"]),
+  content: z.string().max(4000, "Message trop long (max 4000 caractères)."),
+});
+
+const ChatBodySchema = z.object({
+  messages: z
+    .array(ClientMessageSchema)
+    .min(1, "Aucun message fourni.")
+    .max(20, "Trop de messages (max 20)."),
+  mode: z.enum(["chat", "letter", "specialty", "handoff"]).optional().default("chat"),
+  domain: z
+    .enum([
+      "harcelement-scolaire",
+      "travail",
+      "logement",
+      "consommation",
+      "famille",
+      "penal",
+      "administratif",
+      "numerique",
+    ])
+    .nullable()
+    .optional()
+    .default(null),
+  codeSlug: z.string().max(100).nullable().optional().default(null),
+});
+
+type ChatBody = z.infer<typeof ChatBodySchema>;
+type ClientMessage = z.infer<typeof ClientMessageSchema>;
 
 const MODEL = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-6";
 const MAX_RAG_ARTICLES = 8;
@@ -45,6 +67,22 @@ function ragQueryFromMessages(messages: ClientMessage[]): string {
 }
 
 export async function POST(req: NextRequest) {
+  // ─── Rate-limit par IP ────────────────────────────────────────────────────
+  const ip =
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    req.headers.get("x-real-ip") ||
+    "unknown";
+  const { allowed, remaining } = await checkRateLimit(ip);
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "Trop de requêtes. Veuillez patienter avant de réessayer." },
+      {
+        status: 429,
+        headers: { "X-RateLimit-Remaining": "0", "Retry-After": "3600" },
+      }
+    );
+  }
+
   if (!process.env.ANTHROPIC_API_KEY) {
     return NextResponse.json(
       { error: "ANTHROPIC_API_KEY manquant côté serveur." },
@@ -52,17 +90,22 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  let body: ChatBody;
+  // ─── Validation Zod ───────────────────────────────────────────────────────
+  let rawJson: unknown;
   try {
-    body = (await req.json()) as ChatBody;
+    rawJson = await req.json();
   } catch {
-    return NextResponse.json({ error: "Corps invalide." }, { status: 400 });
+    return NextResponse.json({ error: "Corps JSON invalide." }, { status: 400 });
   }
 
-  const { messages, mode = "chat", domain = null, codeSlug = null } = body;
-  if (!messages || !Array.isArray(messages) || messages.length === 0) {
-    return NextResponse.json({ error: "Aucun message fourni." }, { status: 400 });
+  const parsed = ChatBodySchema.safeParse(rawJson);
+  if (!parsed.success) {
+    const detail = parsed.error.issues[0]?.message ?? "Données invalides.";
+    return NextResponse.json({ error: detail }, { status: 400 });
   }
+
+  const body: ChatBody = parsed.data;
+  const { messages, mode, domain, codeSlug } = body;
 
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -224,8 +267,11 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ error: "Mode inconnu." }, { status: 400 });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Erreur inconnue.";
+    const message = err instanceof Error ? err.message : String(err);
     console.error("[api/chat] error:", message);
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json(
+      { error: "Une erreur interne est survenue. Veuillez réessayer." },
+      { status: 500 }
+    );
   }
 }

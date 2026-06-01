@@ -101,8 +101,11 @@ function ChatPageInner() {
     setError(null);
 
     try {
+      // Limite aux 10 derniers tours (20 messages max : 10 user + 10 assistant)
+      // pour maîtriser la taille du contexte et rester dans la validation serveur.
       const apiPayload = nextMessages
         .filter((m) => m.id !== "intro")
+        .slice(-20)
         .map((m) => ({ role: m.role, content: m.content }));
 
       const res = await fetch("/api/chat", {
@@ -133,7 +136,7 @@ function ChatPageInner() {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              messages: [...apiPayload, { role: "assistant", content: assistantMsg.content }],
+              messages: [...apiPayload, { role: "assistant", content: assistantMsg.content }].slice(-20),
               mode: "specialty",
               domain,
             }),

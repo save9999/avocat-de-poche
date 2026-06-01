@@ -48,6 +48,7 @@ export function ChatInput({
           ref={textareaRef}
           rows={1}
           value={value}
+          maxLength={4000}
           onChange={(e) => {
             onChange(e.target.value);
             handleInput();
@@ -67,9 +68,18 @@ export function ChatInput({
           <SendIcon className="h-5 w-5" />
         </button>
       </div>
-      <p className="mt-2 px-2 text-xs text-midnight-400">
-        Entrée pour envoyer · Maj+Entrée pour aller à la ligne
-      </p>
+      <div className="mt-2 flex items-center justify-between px-2">
+        <p className="text-xs text-midnight-400">
+          Entrée pour envoyer · Maj+Entrée pour aller à la ligne
+        </p>
+        <p
+          className={`text-xs tabular-nums ${
+            value.length >= 3800 ? "text-red-500" : "text-midnight-400"
+          }`}
+        >
+          {value.length}/4000
+        </p>
+      </div>
     </form>
   );
 }
