@@ -183,9 +183,9 @@ export function ActionPlan({
         }`}
         aria-label="Plan d'action"
       >
-        <header className="flex items-center justify-between border-b border-midnight-100 px-6 py-4">
+        <header className="flex items-center justify-between border-b border-paper-200 px-6 py-4">
           <div>
-            <p className="text-xs font-medium uppercase tracking-wider text-sage-700">
+            <p className="text-xs font-medium uppercase tracking-wider text-brass-700">
               Plan d'action
             </p>
             <h2 className="font-serif text-2xl font-semibold text-midnight-900">
@@ -195,13 +195,13 @@ export function ActionPlan({
           <button
             onClick={onClose}
             aria-label="Fermer"
-            className="flex h-9 w-9 items-center justify-center rounded-full text-midnight-500 transition hover:bg-midnight-50 hover:text-midnight-900"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-midnight-500 transition hover:bg-paper-100 hover:text-midnight-900"
           >
             <CloseIcon />
           </button>
         </header>
 
-        <nav className="flex border-b border-midnight-100 bg-midnight-50/40 px-6">
+        <nav className="flex border-b border-paper-200 bg-paper-50 px-6">
           <TabButton active={activeTab === "letter"} onClick={() => setActiveTab("letter")} label="Lettre" />
           <TabButton active={activeTab === "evidence"} onClick={() => setActiveTab("evidence")} label="Preuves" />
           <TabButton active={activeTab === "contacts"} onClick={() => setActiveTab("contacts")} label="Contacts" />
@@ -250,7 +250,7 @@ function TabButton({
       onClick={onClick}
       className={`relative -mb-px border-b-2 px-4 py-3 text-sm font-medium transition ${
         active
-          ? "border-sage-600 text-midnight-900"
+          ? "border-brass-600 text-midnight-900"
           : "border-transparent text-midnight-500 hover:text-midnight-800"
       }`}
     >
@@ -298,17 +298,17 @@ function LetterTab({
   }
   return (
     <div className="space-y-4">
-      <div className="flex items-start justify-between gap-3 rounded-xl border border-sage-200 bg-sage-50 p-4">
+      <div className="flex items-start justify-between gap-3 rounded-xl border border-brass-200 bg-brass-50 p-4">
         <div className="flex items-start gap-3">
-          <ClipboardIcon className="mt-0.5 h-5 w-5 text-sage-700" />
-          <p className="text-sm text-sage-900">
+          <ClipboardIcon className="mt-0.5 h-5 w-5 text-brass-700" />
+          <p className="text-sm text-brass-900">
             Lettre adressée au <strong>{recipient}</strong>. À envoyer en lettre
             recommandée avec accusé de réception. Complétez les champs entre crochets.
           </p>
         </div>
         <button
           onClick={onCopy}
-          className="flex flex-shrink-0 items-center gap-1.5 rounded-lg bg-sage-700 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-sage-800"
+          className="flex flex-shrink-0 items-center gap-1.5 rounded-lg bg-brass-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-brass-700"
         >
           {copied ? (
             <>
@@ -321,7 +321,7 @@ function LetterTab({
           )}
         </button>
       </div>
-      <article className="prose-legal rounded-xl border border-midnight-100 bg-white p-6 text-sm leading-relaxed text-midnight-900">
+      <article className="prose-legal rounded-xl border border-paper-200 bg-white p-6 text-sm leading-relaxed text-midnight-900">
         <ReactMarkdown>{letter || "Aucun contenu généré."}</ReactMarkdown>
       </article>
     </div>
@@ -345,7 +345,7 @@ function EvidenceTab({ domain }: { domain: DomainId | null }) {
 
   return (
     <div className="space-y-3">
-      <div className="rounded-xl border border-midnight-100 bg-midnight-50 p-4 text-sm text-midnight-700">
+      <div className="rounded-xl border border-paper-200 bg-paper-50 p-4 text-sm text-midnight-700">
         Conservez chacune de ces pièces dans un dossier dédié (papier + numérique).
         Elles serviront pour toute démarche : signalement, mise en demeure, plainte,
         ou saisine d'une juridiction.
@@ -354,16 +354,16 @@ function EvidenceTab({ domain }: { domain: DomainId | null }) {
         {items.map((item, i) => (
           <li
             key={i}
-            className="flex items-start gap-3 rounded-xl border border-midnight-100 bg-white p-4 text-sm text-midnight-800"
+            className="flex items-start gap-3 rounded-xl border border-paper-200 bg-white p-4 text-sm text-midnight-800"
           >
-            <span className="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-sage-100 text-xs font-semibold text-sage-700">
+            <span className="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-brass-100 text-xs font-semibold text-brass-700">
               {i + 1}
             </span>
             <span className="leading-relaxed">{item}</span>
           </li>
         ))}
       </ul>
-      <div className="mt-2 rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-900">
+      <div className="mt-2 rounded-xl border border-brass-200 bg-brass-50 p-4 text-xs text-brass-900">
         <strong>Conseil :</strong> Nommez vos fichiers de manière systématique
         (<code>YYYY-MM-DD_objet.pdf</code>) et faites des copies sur un support externe.
       </div>
@@ -392,16 +392,16 @@ function ContactsTab({ domain }: { domain: DomainId | null }) {
           href={c.href ?? "#"}
           target={c.href?.startsWith("http") ? "_blank" : undefined}
           rel={c.href?.startsWith("http") ? "noopener noreferrer" : undefined}
-          className="block rounded-xl border border-midnight-100 bg-white p-4 transition hover:border-sage-300 hover:shadow-sm"
+          className="block rounded-xl border border-paper-200 bg-white p-4 transition hover:border-brass-300 hover:shadow-sm"
         >
           <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-midnight-900 text-white">
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-midnight-900 text-brass-200">
               <PhoneIcon className="h-5 w-5" />
             </div>
             <div className="min-w-0 flex-1">
               <h3 className="font-serif text-lg font-semibold text-midnight-900">{c.nom}</h3>
               <p className="mt-1 text-sm leading-relaxed text-midnight-700">{c.description}</p>
-              <p className="mt-2 text-xs font-medium uppercase tracking-wider text-sage-700">
+              <p className="mt-2 text-xs font-medium uppercase tracking-wider text-brass-700">
                 {c.horaires}
               </p>
             </div>
@@ -445,20 +445,20 @@ function LawyerTab({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-xl border border-midnight-100 bg-midnight-50 p-4 text-sm text-midnight-700">
+      <div className="rounded-xl border border-paper-200 bg-paper-50 p-4 text-sm text-midnight-700">
         Trois voies sérieuses pour consulter un avocat. Aucune recommandation nominative.
       </div>
 
       {loading ? (
-        <div className="flex items-center gap-2 rounded-xl border border-midnight-100 bg-white p-4">
+        <div className="flex items-center gap-2 rounded-xl border border-paper-200 bg-white p-4">
           <span className="typing-dot"></span>
           <span className="typing-dot"></span>
           <span className="typing-dot"></span>
           <p className="ml-2 text-sm text-midnight-600">Identification de la spécialité…</p>
         </div>
       ) : (
-        <div className="rounded-xl border border-sage-200 bg-sage-50 p-4">
-          <p className="text-xs font-medium uppercase tracking-wider text-sage-700">
+        <div className="rounded-xl border border-brass-200 bg-brass-50 p-4">
+          <p className="text-xs font-medium uppercase tracking-wider text-brass-700">
             Spécialité recommandée
           </p>
           <p className="mt-1 font-serif text-lg font-semibold text-midnight-900">
@@ -474,7 +474,7 @@ function LawyerTab({
               {specialty.keywords.map((k) => (
                 <span
                   key={k}
-                  className="rounded-full bg-white px-2.5 py-1 text-xs text-sage-800 ring-1 ring-sage-200"
+                  className="rounded-full bg-white px-2.5 py-1 text-xs text-brass-800 ring-1 ring-brass-200"
                 >
                   {k}
                 </span>
@@ -484,7 +484,7 @@ function LawyerTab({
         </div>
       )}
 
-      <div className="rounded-xl border border-midnight-100 bg-white p-4">
+      <div className="rounded-xl border border-paper-200 bg-white p-4">
         <label
           htmlFor="postal-code"
           className="block text-xs font-medium uppercase tracking-wider text-midnight-500"
@@ -502,7 +502,7 @@ function LawyerTab({
             onPostalCodeChange(e.target.value.replace(/[^0-9]/g, ""))
           }
           placeholder="75001"
-          className="mt-2 w-40 rounded-lg border border-midnight-200 px-3 py-2 text-sm focus:border-sage-500 focus:outline-none focus:ring-2 focus:ring-sage-100"
+          className="mt-2 w-40 rounded-lg border border-midnight-200 px-3 py-2 text-sm focus:border-brass-400 focus:outline-none focus:ring-2 focus:ring-brass-100"
         />
         <p className="mt-2 text-xs text-midnight-500">
           Si renseigné, les recherches seront pré-filtrées sur votre ville.
@@ -559,15 +559,15 @@ function LawyerCard({
 }) {
   const toneClasses: Record<typeof badgeTone, string> = {
     midnight: "bg-midnight-900 text-white",
-    sage: "bg-sage-700 text-white",
-    amber: "bg-amber-100 text-amber-900 ring-1 ring-amber-200",
+    sage: "bg-brass-600 text-white",
+    amber: "bg-sage-100 text-sage-900 ring-1 ring-sage-200",
   };
   return (
     <a
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="block rounded-xl border border-midnight-100 bg-white p-5 transition hover:-translate-y-0.5 hover:border-sage-300 hover:shadow-soft"
+      className="block rounded-xl border border-paper-200 bg-white p-5 transition hover:-translate-y-0.5 hover:border-brass-300 hover:shadow-soft"
     >
       <div className="flex items-start justify-between gap-3">
         <h3 className="font-serif text-lg font-semibold text-midnight-900">{title}</h3>
@@ -578,7 +578,7 @@ function LawyerCard({
         </span>
       </div>
       <p className="mt-2 text-sm leading-relaxed text-midnight-700">{description}</p>
-      <div className="mt-3 inline-flex items-center text-sm font-medium text-sage-700">
+      <div className="mt-3 inline-flex items-center text-sm font-medium text-brass-700">
         {ctaLabel}
         <svg className="ml-1.5 h-4 w-4" viewBox="0 0 24 24" fill="none">
           <path d="M7 17L17 7M9 7h8v8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />

@@ -33,6 +33,26 @@ const config: Config = {
           800: "#1f422f",
           900: "#193626",
         },
+        // Accent unique « laiton » — autorité éditoriale, parcimonie (CTA, détails)
+        brass: {
+          50: "#faf6ee",
+          100: "#f3ebd8",
+          200: "#e6d5af",
+          300: "#d4ba7e",
+          400: "#c4a25a",
+          500: "#b08d4f",
+          600: "#97763f",
+          700: "#7a5f33",
+          800: "#5f4a29",
+          900: "#4a3a21",
+        },
+        // Fond papier chaud — registre cabinet, plus chaleureux que le bleu froid
+        paper: {
+          DEFAULT: "#f8f6f1",
+          50: "#fbfaf6",
+          100: "#f3f0e8",
+          200: "#e8e3d6",
+        },
       },
       fontFamily: {
         sans: ["var(--font-inter)", "system-ui", "sans-serif"],
@@ -40,6 +60,10 @@ const config: Config = {
       },
       boxShadow: {
         soft: "0 10px 40px -10px rgba(15, 26, 54, 0.18)",
+        card: "0 1px 2px rgba(15, 26, 54, 0.04), 0 8px 24px -16px rgba(15, 26, 54, 0.18)",
+      },
+      letterSpacing: {
+        eyebrow: "0.22em",
       },
     },
   },

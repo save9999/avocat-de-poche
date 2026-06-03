@@ -32,21 +32,21 @@ export function CookieBanner() {
       aria-modal="false"
       aria-label="Avis sur les cookies"
       aria-live="polite"
-      className="fixed bottom-0 left-0 right-0 z-50 border-t border-midnight-100 bg-white px-4 py-4 shadow-lg sm:px-6"
+      className="fixed bottom-0 left-0 right-0 z-50 border-t border-paper-200 bg-white/95 px-4 py-3 shadow-card backdrop-blur-md sm:px-6"
     >
-      <div className="mx-auto flex max-w-4xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm leading-relaxed text-midnight-700">
-          Ce site n'utilise <strong>aucun cookie de traçage</strong>. Seuls des cookies techniques strictement nécessaires au fonctionnement peuvent être définis.{" "}
+      <div className="mx-auto flex max-w-4xl flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-xs leading-relaxed text-midnight-600 sm:text-[13px]">
+          Ce site n'utilise <strong className="font-semibold text-midnight-800">aucun cookie de traçage</strong>. Seuls des cookies techniques strictement nécessaires au fonctionnement peuvent être définis.{" "}
           <Link
             href="/confidentialite"
-            className="underline hover:text-midnight-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
+            className="underline decoration-brass-300 underline-offset-2 hover:text-midnight-900 focus-visible:rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass-500"
           >
             En savoir plus
           </Link>
         </p>
         <button
           onClick={dismiss}
-          className="shrink-0 rounded-lg border border-midnight-200 bg-white px-4 py-2 text-sm font-medium text-midnight-700 transition hover:bg-midnight-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+          className="shrink-0 rounded-lg bg-midnight-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-midnight-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass-500 focus-visible:ring-offset-2"
           aria-label="Fermer cet avis sur les cookies"
         >
           Compris

@@ -33,7 +33,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
       }`}
     >
       {!isUser && (
-        <div className="mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-midnight-900 text-white">
+        <div className="mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-midnight-900 text-brass-200">
           <ScaleIcon className="h-5 w-5" />
         </div>
       )}
@@ -42,7 +42,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
         className={`max-w-[78%] rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm sm:text-[15px] ${
           isUser
             ? "rounded-tr-sm bg-midnight-900 text-white"
-            : "rounded-tl-sm border border-midnight-100 bg-white text-midnight-900"
+            : "rounded-tl-sm border border-paper-200 bg-white text-midnight-900"
         }`}
       >
         {isUser ? (
@@ -73,7 +73,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
               {message.content}
             </ReactMarkdown>
             {message.sources && message.sources.length > 0 && (
-              <div className="mt-3 flex flex-wrap gap-1.5 border-t border-midnight-100 pt-2.5">
+              <div className="mt-3 flex flex-wrap gap-1.5 border-t border-paper-200 pt-2.5">
                 {message.sources.map((src, i) => (
                   src.url ? (
                     <a
@@ -88,7 +88,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
                   ) : (
                     <span
                       key={i}
-                      className="inline-flex items-center rounded-full border border-midnight-100 bg-midnight-50 px-2.5 py-1 text-[11px] font-medium text-midnight-600"
+                      className="inline-flex items-center rounded-full border border-paper-200 bg-paper-100 px-2.5 py-1 text-[11px] font-medium text-midnight-600"
                     >
                       {src.reference}
                     </span>
@@ -120,10 +120,10 @@ export function ChatMessage({ message }: ChatMessageProps) {
 export function TypingIndicator() {
   return (
     <div className="fade-in flex items-start gap-3">
-      <div className="mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-midnight-900 text-white">
+      <div className="mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-midnight-900 text-brass-200">
         <ScaleIcon className="h-5 w-5" />
       </div>
-      <div className="flex items-center gap-1 rounded-2xl rounded-tl-sm border border-midnight-100 bg-white px-4 py-3 shadow-sm">
+      <div className="flex items-center gap-1 rounded-2xl rounded-tl-sm border border-paper-200 bg-white px-4 py-3 shadow-sm">
         <span className="typing-dot"></span>
         <span className="typing-dot"></span>
         <span className="typing-dot"></span>

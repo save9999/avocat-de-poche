@@ -43,7 +43,7 @@ export function ChatInput({
 
   return (
     <form onSubmit={handleSubmit} className="w-full">
-      <div className="flex items-end gap-2 rounded-2xl border border-midnight-200 bg-white p-2 shadow-soft focus-within:border-sage-400 focus-within:ring-2 focus-within:ring-sage-100">
+      <div className="flex items-end gap-2 rounded-2xl border border-paper-200 bg-white p-2 shadow-card focus-within:border-brass-400 focus-within:ring-2 focus-within:ring-brass-100">
         <textarea
           ref={textareaRef}
           rows={1}

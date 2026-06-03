@@ -85,9 +85,9 @@ export function LawyerHandoff({
 
   return (
     <>
-      <div className="fade-in rounded-2xl border-2 border-sage-300 bg-gradient-to-br from-sage-50 via-white to-sage-50 p-5 shadow-soft">
+      <div className="fade-in rounded-2xl border border-brass-200 bg-gradient-to-br from-brass-50 via-white to-brass-50 p-5 shadow-card">
         <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-sage-700 text-white">
+          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-brass-600 text-white">
             <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none">
               <path
                 d="M9 12h6m-6 4h6m-9 5h12a2 2 0 002-2V7l-5-5H6a2 2 0 00-2 2v15a2 2 0 002 2z"
@@ -99,7 +99,7 @@ export function LawyerHandoff({
             </svg>
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-medium uppercase tracking-wider text-sage-700">
+            <p className="text-xs font-medium uppercase tracking-wider text-brass-700">
               Étape suivante
             </p>
             <h3 className="mt-1 font-serif text-xl font-semibold text-midnight-900">
@@ -124,7 +124,7 @@ export function LawyerHandoff({
             <div className="mt-4 flex flex-wrap items-center gap-3">
               <button
                 onClick={() => setOpen(true)}
-                className="inline-flex items-center gap-2 rounded-xl bg-sage-700 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-sage-800"
+                className="inline-flex items-center gap-2 rounded-xl bg-brass-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brass-700"
               >
                 Transmettre mon dossier pré-analysé à un avocat en direct
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
@@ -164,9 +164,9 @@ export function LawyerHandoff({
           open ? "translate-y-0" : "translate-y-full sm:translate-y-4"
         } ${open ? "" : "pointer-events-none"}`}
       >
-        <header className="flex items-start justify-between gap-4 border-b border-midnight-100 px-6 py-4">
+        <header className="flex items-start justify-between gap-4 border-b border-paper-200 px-6 py-4">
           <div>
-            <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-sage-700">
+            <p className="text-[10px] font-semibold uppercase tracking-eyebrow text-brass-700">
               Dossier pré-analysé
             </p>
             <h2 className="mt-1 font-serif text-xl font-semibold text-midnight-900">
@@ -180,7 +180,7 @@ export function LawyerHandoff({
           <button
             onClick={() => setOpen(false)}
             aria-label="Fermer"
-            className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-midnight-500 transition hover:bg-midnight-50 hover:text-midnight-900"
+            className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-midnight-500 transition hover:bg-paper-100 hover:text-midnight-900"
           >
             <CloseIcon />
           </button>
@@ -211,7 +211,7 @@ export function LawyerHandoff({
           )}
         </div>
 
-        <footer className="flex flex-col gap-2 border-t border-midnight-100 bg-midnight-50/60 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <footer className="flex flex-col gap-2 border-t border-paper-200 bg-paper-50 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={handleCopy}
@@ -220,7 +220,7 @@ export function LawyerHandoff({
             >
               {copied ? (
                 <>
-                  <CheckIcon className="h-4 w-4 text-sage-700" /> Copié
+                  <CheckIcon className="h-4 w-4 text-brass-700" /> Copié
                 </>
               ) : (
                 <>
@@ -251,7 +251,7 @@ export function LawyerHandoff({
               onOpenPlan();
             }}
             disabled={!summary}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-sage-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sage-800 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-brass-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-brass-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Trouver un avocat partenaire
             <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">

@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function CGU() {
   return (
-    <div className="min-h-screen bg-midnight-50">
+    <div className="min-h-screen bg-paper">
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-midnight-900 focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white focus:outline-none"
@@ -18,20 +18,20 @@ export default function CGU() {
         Aller au contenu
       </a>
 
-      <header className="border-b border-midnight-100 bg-white">
+      <header className="border-b border-paper-200 bg-white">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
           <Link
             href="/"
-            className="flex items-center gap-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded-lg"
+            className="flex items-center gap-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass-500 focus-visible:ring-offset-2 rounded-lg"
             aria-label="Retour à l'accueil Avocat de Poche"
           >
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-midnight-900 text-white">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-midnight-900 text-brass-200">
               <ScaleIcon className="h-5 w-5" aria-hidden="true" />
             </div>
             <span className="font-serif text-lg font-semibold text-midnight-900">Avocat de Poche</span>
           </Link>
           <nav aria-label="Navigation secondaire">
-            <Link href="/" className="text-sm text-midnight-600 hover:text-midnight-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded">
+            <Link href="/" className="text-sm text-midnight-600 hover:text-midnight-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass-500 rounded">
               ← Retour à l'accueil
             </Link>
           </nav>
@@ -43,15 +43,15 @@ export default function CGU() {
           Conditions générales d'utilisation
         </h1>
 
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 text-amber-900 text-sm mb-8" role="note" aria-label="Avertissement important">
+        <div className="rounded-xl border border-brass-200 bg-brass-50 px-5 py-4 text-brass-900 text-sm mb-8" role="note" aria-label="Avertissement important">
           <strong>Rappel :</strong> Avocat de Poche est un outil d'information juridique. Il ne remplace pas la consultation d'un avocat. Pour toute situation grave, contactez un professionnel du droit ou les numéros d'urgence : <a href="tel:3018" className="font-bold underline">3018</a>, <a href="tel:119" className="font-bold underline">119</a>.
         </div>
 
-        <div className="rounded-3xl border border-midnight-100 bg-white p-8 sm:p-10 space-y-8 text-midnight-700 leading-relaxed">
+        <div className="rounded-3xl border border-paper-200 bg-white p-8 sm:p-10 space-y-8 text-midnight-700 leading-relaxed">
 
           <section aria-labelledby="objet">
             <h2 id="objet" className="font-serif text-xl font-semibold text-midnight-900 mb-3">1. Objet</h2>
-            <p>Les présentes Conditions Générales d'Utilisation (CGU) régissent l'accès et l'utilisation du service <strong>Avocat de Poche</strong> (ci-après « le Service »), accessible à l'adresse <a href="https://avocat-de-poche.vercel.app" className="underline hover:text-midnight-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded">avocat-de-poche.vercel.app</a>.</p>
+            <p>Les présentes Conditions Générales d'Utilisation (CGU) régissent l'accès et l'utilisation du service <strong>Avocat de Poche</strong> (ci-après « le Service »), accessible à l'adresse <a href="https://avocat-de-poche.vercel.app" className="underline hover:text-midnight-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass-500 rounded">avocat-de-poche.vercel.app</a>.</p>
             <p className="mt-2">Le Service est un outil d'information juridique gratuit, destiné à aider les familles et les adolescents confrontés au harcèlement scolaire à comprendre leurs droits et les démarches possibles en droit français.</p>
           </section>
 
@@ -95,7 +95,7 @@ export default function CGU() {
           <section aria-labelledby="ia-cgu">
             <h2 id="ia-cgu" className="font-serif text-xl font-semibold text-midnight-900 mb-3">7. Service d'IA — limites et responsabilité</h2>
             <p>Le chatbot est alimenté par un modèle d'intelligence artificielle (Claude, Anthropic). Les réponses générées sont probabilistes et peuvent contenir des inexactitudes. L'éditeur ne garantit pas l'exhaustivité, l'exactitude ou l'actualité des informations produites.</p>
-            <p className="mt-2">En cas de doute, l'utilisateur est invité à vérifier les informations sur <a href="https://www.legifrance.gouv.fr" target="_blank" rel="noopener noreferrer" className="underline hover:text-midnight-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded">Légifrance</a>.</p>
+            <p className="mt-2">En cas de doute, l'utilisateur est invité à vérifier les informations sur <a href="https://www.legifrance.gouv.fr" target="_blank" rel="noopener noreferrer" className="underline hover:text-midnight-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass-500 rounded">Légifrance</a>.</p>
           </section>
 
           <section aria-labelledby="modifications">
@@ -108,15 +108,15 @@ export default function CGU() {
             <p>Les présentes CGU sont soumises au droit français. En cas de litige, une solution amiable sera recherchée avant tout recours judiciaire. Le Médiateur de la consommation compétent peut être saisi conformément aux articles L. 611-1 et suivants du Code de la consommation.</p>
           </section>
 
-          <p className="text-xs text-midnight-400 pt-4 border-t border-midnight-100">
+          <p className="text-xs text-midnight-400 pt-4 border-t border-paper-200">
             Dernière mise à jour : mai 2026
           </p>
         </div>
 
         <nav aria-label="Liens légaux" className="mt-8 flex flex-wrap gap-4 text-sm text-midnight-500">
-          <Link href="/mentions-legales" className="hover:text-midnight-900 underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded">Mentions légales</Link>
-          <Link href="/confidentialite" className="hover:text-midnight-900 underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded">Politique de confidentialité</Link>
-          <Link href="/" className="hover:text-midnight-900 underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded">Accueil</Link>
+          <Link href="/mentions-legales" className="hover:text-midnight-900 underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass-500 rounded">Mentions légales</Link>
+          <Link href="/confidentialite" className="hover:text-midnight-900 underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass-500 rounded">Politique de confidentialité</Link>
+          <Link href="/" className="hover:text-midnight-900 underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass-500 rounded">Accueil</Link>
         </nav>
       </main>
     </div>

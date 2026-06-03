@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 export default function Confidentialite() {
   return (
-    <div className="min-h-screen bg-midnight-50">
+    <div className="min-h-screen bg-paper">
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-midnight-900 focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white focus:outline-none"
@@ -19,20 +19,20 @@ export default function Confidentialite() {
         Aller au contenu
       </a>
 
-      <header className="border-b border-midnight-100 bg-white">
+      <header className="border-b border-paper-200 bg-white">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
           <Link
             href="/"
-            className="flex items-center gap-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded-lg"
+            className="flex items-center gap-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass-500 focus-visible:ring-offset-2 rounded-lg"
             aria-label="Retour à l'accueil Avocat de Poche"
           >
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-midnight-900 text-white">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-midnight-900 text-brass-200">
               <ScaleIcon className="h-5 w-5" aria-hidden="true" />
             </div>
             <span className="font-serif text-lg font-semibold text-midnight-900">Avocat de Poche</span>
           </Link>
           <nav aria-label="Navigation secondaire">
-            <Link href="/" className="text-sm text-midnight-600 hover:text-midnight-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded">
+            <Link href="/" className="text-sm text-midnight-600 hover:text-midnight-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass-500 rounded">
               ← Retour à l'accueil
             </Link>
           </nav>
@@ -60,12 +60,12 @@ export default function Confidentialite() {
           </ul>
         </div>
 
-        <div className="rounded-3xl border border-midnight-100 bg-white p-8 sm:p-10 space-y-8 text-midnight-700 leading-relaxed">
+        <div className="rounded-3xl border border-paper-200 bg-white p-8 sm:p-10 space-y-8 text-midnight-700 leading-relaxed">
 
           <section aria-labelledby="responsable">
             <h2 id="responsable" className="font-serif text-xl font-semibold text-midnight-900 mb-3">1. Responsable de traitement</h2>
             <p>Le responsable de traitement est l'éditeur bénévole du site Avocat de Poche, résidant en France.</p>
-            <p className="mt-2">Contact : <a href="mailto:contact@avocatdepoche.fr" className="underline hover:text-midnight-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded">contact@avocatdepoche.fr</a></p>
+            <p className="mt-2">Contact : <a href="mailto:contact@avocatdepoche.fr" className="underline hover:text-midnight-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass-500 rounded">contact@avocatdepoche.fr</a></p>
           </section>
 
           <section aria-labelledby="donnees-collectees">
@@ -83,7 +83,7 @@ export default function Confidentialite() {
 
           <section aria-labelledby="mineurs-rgpd">
             <h2 id="mineurs-rgpd" className="font-serif text-xl font-semibold text-midnight-900 mb-3">3. Protection spécifique des mineurs (RGPD art. 8)</h2>
-            <div className="rounded-xl border border-blue-200 bg-blue-50 p-5 text-blue-900 text-sm" role="note" aria-label="Protection des mineurs">
+            <div className="rounded-xl border border-brass-200 bg-brass-50 p-5 text-brass-900 text-sm" role="note" aria-label="Protection des mineurs">
               <p className="font-semibold mb-2">Conformité RGPD article 8 — Consentement des mineurs</p>
               <p>Le RGPD (article 8) exige le consentement parental pour le traitement des données personnelles des mineurs de moins de 15 ans en France (loi Informatique et Libertés, art. 7-1). <strong>Avocat de Poche ne collecte aucune donnée personnelle</strong>, rendant toute question de consentement parental sans objet.</p>
             </div>
@@ -113,7 +113,7 @@ export default function Confidentialite() {
             <p className="mt-2">Selon la politique d'utilisation des données d'Anthropic :</p>
             <ul className="mt-2 ml-5 list-disc space-y-1 text-sm">
               <li>Les données des clients API ne sont pas utilisées pour entraîner les modèles sans consentement explicite</li>
-              <li>Les échanges API sont soumis à leur <a href="https://www.anthropic.com/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-midnight-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded">politique de confidentialité</a></li>
+              <li>Les échanges API sont soumis à leur <a href="https://www.anthropic.com/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-midnight-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass-500 rounded">politique de confidentialité</a></li>
               <li>Anthropic est certifié conforme aux normes de sécurité SOC 2 Type II</li>
             </ul>
             <p className="mt-2">Compte tenu du transfert vers les États-Unis, des clauses contractuelles types (CCT) sont applicables conformément à l'article 46 du RGPD.</p>
@@ -142,8 +142,8 @@ export default function Confidentialite() {
               <li><strong>Portabilité</strong> : droit de recevoir vos données dans un format lisible</li>
               <li><strong>Opposition</strong> : droit de s'opposer au traitement</li>
             </ul>
-            <p className="mt-3">Étant donné qu'Avocat de Poche ne stocke aucune donnée personnelle, l'exercice de la plupart de ces droits est sans objet. Pour toute question, contactez-nous : <a href="mailto:contact@avocatdepoche.fr" className="underline hover:text-midnight-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded">contact@avocatdepoche.fr</a></p>
-            <p className="mt-2">Vous pouvez également saisir la <strong>CNIL</strong> (Commission Nationale de l'Informatique et des Libertés) : <a href="https://www.cnil.fr" target="_blank" rel="noopener noreferrer" className="underline hover:text-midnight-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded">www.cnil.fr</a> — 3 Place de Fontenoy, TSA 80715, 75334 Paris Cedex 07.</p>
+            <p className="mt-3">Étant donné qu'Avocat de Poche ne stocke aucune donnée personnelle, l'exercice de la plupart de ces droits est sans objet. Pour toute question, contactez-nous : <a href="mailto:contact@avocatdepoche.fr" className="underline hover:text-midnight-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass-500 rounded">contact@avocatdepoche.fr</a></p>
+            <p className="mt-2">Vous pouvez également saisir la <strong>CNIL</strong> (Commission Nationale de l'Informatique et des Libertés) : <a href="https://www.cnil.fr" target="_blank" rel="noopener noreferrer" className="underline hover:text-midnight-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass-500 rounded">www.cnil.fr</a> — 3 Place de Fontenoy, TSA 80715, 75334 Paris Cedex 07.</p>
           </section>
 
           <section aria-labelledby="securite">
@@ -166,15 +166,15 @@ export default function Confidentialite() {
             <p>Cette politique peut être mise à jour. La date de dernière modification est indiquée ci-dessous. En cas de modification substantielle, un avertissement sera affiché sur le site pendant 30 jours.</p>
           </section>
 
-          <p className="text-xs text-midnight-400 pt-4 border-t border-midnight-100">
+          <p className="text-xs text-midnight-400 pt-4 border-t border-paper-200">
             Dernière mise à jour : mai 2026 · Conformité RGPD (UE) 2016/679 · Loi Informatique et Libertés (modifiée 2018)
           </p>
         </div>
 
         <nav aria-label="Liens légaux" className="mt-8 flex flex-wrap gap-4 text-sm text-midnight-500">
-          <Link href="/mentions-legales" className="hover:text-midnight-900 underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded">Mentions légales</Link>
-          <Link href="/cgu" className="hover:text-midnight-900 underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded">CGU</Link>
-          <Link href="/" className="hover:text-midnight-900 underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded">Accueil</Link>
+          <Link href="/mentions-legales" className="hover:text-midnight-900 underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass-500 rounded">Mentions légales</Link>
+          <Link href="/cgu" className="hover:text-midnight-900 underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass-500 rounded">CGU</Link>
+          <Link href="/" className="hover:text-midnight-900 underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass-500 rounded">Accueil</Link>
         </nav>
       </main>
     </div>

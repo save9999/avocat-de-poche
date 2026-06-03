@@ -155,15 +155,15 @@ function ChatPageInner() {
   };
 
   return (
-    <div className="flex h-[100dvh] flex-col bg-midnight-50">
+    <div className="flex h-[100dvh] flex-col bg-paper">
       <Disclaimer />
 
       {/* ── Header ── */}
-      <header className="flex items-center justify-between border-b border-midnight-100 bg-white px-4 py-3 sm:px-6">
+      <header className="flex items-center justify-between border-b border-paper-200 bg-paper/90 px-4 py-3 backdrop-blur-md sm:px-6">
         <div className="flex items-center gap-3">
           <Link
             href="/"
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-midnight-600 transition hover:bg-midnight-50 hover:text-midnight-900"
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-midnight-600 transition hover:bg-paper-100 hover:text-midnight-900"
             aria-label="Retour à l'accueil"
           >
             <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none">
@@ -171,14 +171,14 @@ function ChatPageInner() {
             </svg>
           </Link>
           <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-midnight-900 text-white">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-midnight-900 text-brass-200">
               <ScaleIcon className="h-5 w-5" />
             </div>
             <div className="min-w-0">
               <p className="font-serif text-base font-semibold leading-none text-midnight-900">
                 {domainConfig ? domainConfig.label : "Avocat de Poche"}
               </p>
-              <p className="text-[10px] uppercase tracking-[0.18em] text-midnight-500">
+              <p className="text-[10px] uppercase tracking-eyebrow text-midnight-500">
                 {domainConfig ? "Consultation juridique" : "Tous domaines"}
               </p>
             </div>
@@ -193,8 +193,8 @@ function ChatPageInner() {
           disabled={!canGeneratePlan}
           className={`flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition sm:px-4 ${
             canGeneratePlan
-              ? "bg-sage-700 text-white hover:bg-sage-800"
-              : "cursor-not-allowed bg-midnight-100 text-midnight-400"
+              ? "bg-brass-600 text-white hover:bg-brass-700"
+              : "cursor-not-allowed bg-paper-100 text-midnight-400"
           }`}
         >
           <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none">
@@ -206,14 +206,14 @@ function ChatPageInner() {
       </header>
 
       {/* ── Sélecteur de domaine ── */}
-      <nav className="border-b border-midnight-100 bg-white" aria-label="Domaines juridiques">
+      <nav className="border-b border-paper-200 bg-paper-50" aria-label="Domaines juridiques">
         <div className="scrollbar-thin mx-auto flex max-w-5xl items-center gap-1.5 overflow-x-auto px-4 py-2 sm:px-6">
           <button
             onClick={() => switchDomain(null)}
             className={`flex-shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium transition ${
               domain === null
                 ? "bg-midnight-900 text-white"
-                : "bg-midnight-50 text-midnight-600 hover:bg-midnight-100"
+                : "bg-white text-midnight-600 hover:bg-paper-100"
             }`}
           >
             Tous
@@ -225,7 +225,7 @@ function ChatPageInner() {
               className={`flex-shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium transition ${
                 domain === d.id
                   ? "bg-midnight-900 text-white"
-                  : "bg-midnight-50 text-midnight-600 hover:bg-midnight-100"
+                  : "bg-white text-midnight-600 hover:bg-paper-100"
               }`}
             >
               {d.shortLabel}
@@ -254,8 +254,8 @@ function ChatPageInner() {
           )}
           {/* Exemples si conversation vide */}
           {userMessageCount === 0 && (
-            <div className="mt-2 rounded-2xl border border-midnight-100 bg-white p-4">
-              <p className="mb-2 text-xs font-medium uppercase tracking-wider text-midnight-500">
+            <div className="mt-2 rounded-2xl border border-paper-200 bg-white p-4 shadow-card">
+              <p className="mb-2 text-[11px] font-semibold uppercase tracking-eyebrow text-brass-700">
                 Exemples de questions
               </p>
               <ul className="space-y-1.5">
@@ -316,7 +316,7 @@ function ChatPageInner() {
       </main>
 
       {/* ── Input ── */}
-      <footer className="border-t border-midnight-100 bg-white px-3 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:px-6">
+      <footer className="border-t border-paper-200 bg-paper/90 px-3 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur-md sm:px-6">
         <div className="mx-auto max-w-3xl">
           <ChatInput
             value={input}
@@ -351,7 +351,7 @@ export default function ChatPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex h-[100dvh] items-center justify-center bg-midnight-50">
+        <div className="flex h-[100dvh] items-center justify-center bg-paper">
           <div className="flex gap-1">
             <span className="typing-dot" />
             <span className="typing-dot" />
