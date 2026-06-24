@@ -59,6 +59,9 @@ function lastUserMessage(messages: ClientMessage[]): string | null {
   return null;
 }
 
+const SATURATED_MSG =
+  "⚠️ Le service de rédaction gratuit est momentanément saturé (quota journalier atteint). Réessayez dans quelques minutes. En attendant, les sources officielles affichées dans le chat restent consultables.";
+
 /**
  * Réponse de secours sans LLM : utilisée quand le modèle gratuit est saturé.
  * On présente directement les sources officielles trouvées par le RAG — toujours
@@ -185,11 +188,18 @@ export async function POST(req: NextRequest) {
         .map((m) => `${m.role === "user" ? "Utilisateur" : "Avocat de Poche"} : ${m.content}`)
         .join("\n\n");
 
-      const letter = await generateText(
-        buildLetterPrompt(ctx, domain),
-        [{ role: "user", content: "Rédige la lettre maintenant au format markdown." }],
-        2048,
-      );
+      let letter: string;
+      try {
+        letter = await generateText(
+          buildLetterPrompt(ctx, domain),
+          [{ role: "user", content: "Rédige la lettre maintenant au format markdown." }],
+          2048,
+        );
+        if (!letter.trim()) letter = SATURATED_MSG;
+      } catch (e) {
+        console.warn("[api/chat letter] LLM indisponible :", (e as Error).message);
+        letter = SATURATED_MSG;
+      }
 
       return NextResponse.json({ letter });
     }
@@ -200,11 +210,16 @@ export async function POST(req: NextRequest) {
         .map((m) => `${m.role === "user" ? "Utilisateur" : "Avocat de Poche"} : ${m.content}`)
         .join("\n\n");
 
-      const raw = await generateText(
-        buildSpecialtyPrompt(ctx, domain),
-        [{ role: "user", content: "Analyse et renvoie le JSON de spécialité." }],
-        400,
-      );
+      let raw = "";
+      try {
+        raw = await generateText(
+          buildSpecialtyPrompt(ctx, domain),
+          [{ role: "user", content: "Analyse et renvoie le JSON de spécialité." }],
+          400,
+        );
+      } catch (e) {
+        console.warn("[api/chat specialty] LLM indisponible :", (e as Error).message);
+      }
 
       const jsonMatch = raw.match(/\{[\s\S]*\}/);
       let parsed: { specialty: string; label: string; keywords: string[]; reason: string } | null = null;
@@ -244,11 +259,18 @@ export async function POST(req: NextRequest) {
         console.warn("[api/chat handoff] RAG indisponible :", (ragErr as Error).message);
       }
 
-      const summary = await generateText(
-        buildHandoffPrompt(ctx, formatArticlesForPrompt(articles), domain),
-        [{ role: "user", content: "Rédige le dossier pré-analysé maintenant." }],
-        1800,
-      );
+      let summary: string;
+      try {
+        summary = await generateText(
+          buildHandoffPrompt(ctx, formatArticlesForPrompt(articles), domain),
+          [{ role: "user", content: "Rédige le dossier pré-analysé maintenant." }],
+          1800,
+        );
+        if (!summary.trim()) summary = SATURATED_MSG;
+      } catch (e) {
+        console.warn("[api/chat handoff] LLM indisponible :", (e as Error).message);
+        summary = SATURATED_MSG;
+      }
 
       return NextResponse.json({
         summary,
