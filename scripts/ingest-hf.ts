@@ -9,7 +9,7 @@
  *   `erdal/legifrance` agrège la base complète, code par code.
  *
  * Usage :
- *   1. .env.local doit contenir OPENAI_API_KEY + SUPABASE_SERVICE_ROLE_KEY
+ *   1. .env.local doit contenir GEMINI_API_KEY + SUPABASE_SERVICE_ROLE_KEY
  *   2. npm run ingest:hf                          → 10 codes par défaut
  *      npm run ingest:hf -- --codes code-civil    → un sous-ensemble
  *      npm run ingest:hf -- --dry-run             → sans embeddings/upsert
@@ -40,21 +40,27 @@ async function getHyparquet(): Promise<HyparquetModule> {
 loadEnv({ path: ".env.local" });
 
 // ── Configuration ────────────────────────────────────────────────────────
-const BATCH_EMBED = 96;
+// Gros batchs : Voyage accepte jusqu'à 1000 textes/requête. Comme le free tier
+// limite le NOMBRE de requêtes/min (~3 RPM), de gros batchs maximisent le débit.
+const BATCH_EMBED = 128;
+const EMBED_PAUSE_MS = 200;
 const BATCH_UPSERT = 200;
 const MAX_CHARS = 12000;
+// text-embedding-004 plafonne l'entrée à 2048 tokens → on tronque le texte embedé
+// (le contenu stocké en base reste complet à MAX_CHARS).
+const MAX_EMBED_CHARS = 7000;
 const CACHE_DIR = path.join(os.homedir(), "legi-hf");
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const VOYAGE_API_KEY = process.env.VOYAGE_API_KEY;
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
   console.error("✖ NEXT_PUBLIC_SUPABASE_URL ou SUPABASE_SERVICE_ROLE_KEY manquant.");
   process.exit(1);
 }
-if (!OPENAI_API_KEY) {
-  console.error("✖ OPENAI_API_KEY manquant.");
+if (!VOYAGE_API_KEY) {
+  console.error("✖ VOYAGE_API_KEY manquant.");
   process.exit(1);
 }
 
@@ -232,28 +238,43 @@ function toPendingRow(row: ParquetRow, codeSlug: string, codeLabel: string): Pen
   };
 }
 
-// ── Embeddings OpenAI ────────────────────────────────────────────────────
+// ── Embeddings Voyage AI (voyage-law-2, 1024-dim, spécialisé juridique) ──
+const VOYAGE_EMBED_URL = "https://api.voyageai.com/v1/embeddings";
+
 async function embedBatch(texts: string[], retry = 0): Promise<number[][]> {
-  const res = await fetch("https://api.openai.com/v1/embeddings", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${OPENAI_API_KEY}`,
-    },
-    body: JSON.stringify({
-      model: "text-embedding-3-small",
-      input: texts,
-      encoding_format: "float",
-    }),
-  });
-  if (res.status === 429 && retry < 3) {
-    const wait = 2000 * (retry + 1);
-    console.warn(`   ⏱ 429 rate-limit, retry dans ${wait}ms…`);
+  const MAX_RETRY = 8;
+  let res: Response;
+  try {
+    res = await fetch(VOYAGE_EMBED_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${VOYAGE_API_KEY}`,
+      },
+      body: JSON.stringify({
+        input: texts.map((t) => t.slice(0, MAX_EMBED_CHARS)),
+        model: "voyage-law-2",
+        input_type: "document",
+      }),
+    });
+  } catch (err) {
+    // Erreur réseau transitoire (fetch failed, ECONNRESET, timeout DNS…) → retry.
+    if (retry < MAX_RETRY) {
+      const wait = Math.min(60000, 3000 * 2 ** retry);
+      console.warn(`   ⏱ réseau (${(err as Error).message.slice(0, 40)}) — retry dans ${Math.round(wait / 1000)}s…`);
+      await new Promise((r) => setTimeout(r, wait));
+      return embedBatch(texts, retry + 1);
+    }
+    throw err;
+  }
+  if ((res.status === 429 || res.status >= 500) && retry < MAX_RETRY) {
+    const wait = Math.min(60000, 3000 * 2 ** retry);
+    console.warn(`   ⏱ ${res.status} rate-limit, retry dans ${Math.round(wait / 1000)}s…`);
     await new Promise((r) => setTimeout(r, wait));
     return embedBatch(texts, retry + 1);
   }
   if (!res.ok) {
-    throw new Error(`OpenAI ${res.status}: ${(await res.text()).slice(0, 200)}`);
+    throw new Error(`Voyage ${res.status}: ${(await res.text()).slice(0, 200)}`);
   }
   const json = (await res.json()) as {
     data: Array<{ embedding: number[]; index: number }>;
@@ -280,6 +301,9 @@ async function flush(rows: PendingRow[], dryRun: boolean, noEmbed: boolean) {
       const texts = slice.map((r) => `${r.reference} (${r.code})\n\n${r.content}`);
       const out = await embedBatch(texts);
       real.push(...out);
+      if (i + BATCH_EMBED < rows.length) {
+        await new Promise((r) => setTimeout(r, EMBED_PAUSE_MS));
+      }
     }
     embeddings = real;
   }
@@ -341,8 +365,30 @@ async function main() {
     }
     console.log(`   ↳ ${pending.length} VIGUEUR retenues (dédupliquées par cid)`);
 
-    for (let i = 0; i < pending.length; i += BATCH_UPSERT) {
-      const batch = pending.slice(i, i + BATCH_UPSERT);
+    // Resume-safe : on saute les articles déjà présents en base AVEC embedding,
+    // pour qu'une relance reprenne où la précédente s'était arrêtée (quota Gemini).
+    let toProcess = pending;
+    if (!dryRun && !noEmbed && pending.length > 0) {
+      const already = new Set<string>();
+      const allCids = pending.map((p) => p.cid);
+      for (let i = 0; i < allCids.length; i += 1000) {
+        // NB : pas de filtre `embedding is not null` — PostgREST ne gère pas
+      // `is null` sur une colonne vector. Tout cid présent a été upserté avec embedding.
+      const { data } = await supabase
+          .from("legal_articles")
+          .select("cid")
+          .in("cid", allCids.slice(i, i + 1000));
+        (data ?? []).forEach((row: { cid: string }) => already.add(row.cid));
+      }
+      if (already.size > 0) {
+        toProcess = pending.filter((p) => !already.has(p.cid));
+        kept += already.size;
+        console.log(`   ↳ ${already.size} déjà embedés (skip) — ${toProcess.length} à traiter`);
+      }
+    }
+
+    for (let i = 0; i < toProcess.length; i += BATCH_UPSERT) {
+      const batch = toProcess.slice(i, i + BATCH_UPSERT);
       await flush(batch, Boolean(dryRun), Boolean(noEmbed));
       kept += batch.length;
       const rate = kept / ((Date.now() - startedAt) / 1000);

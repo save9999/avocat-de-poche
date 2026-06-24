@@ -58,8 +58,8 @@ export default function MentionsLegales() {
 
           <section aria-labelledby="ia">
             <h2 id="ia" className="font-serif text-xl font-semibold text-midnight-900 mb-3">3. Service d'intelligence artificielle</h2>
-            <p>Le chatbot juridique est alimenté par l'API Claude d'<strong>Anthropic, PBC</strong>, 548 Market St PMB 90375, San Francisco, CA 94104, États-Unis.</p>
-            <p className="mt-2">Les échanges sont traités par l'API d'Anthropic et ne sont pas conservés par Avocat de Poche.</p>
+            <p>Le chatbot juridique est alimenté par l'API Gemini de <strong>Google LLC</strong>, 1600 Amphitheatre Parkway, Mountain View, CA 94043, États-Unis. Les textes de loi proviennent de Légifrance et de Service-Public.fr (DILA, licence ouverte).</p>
+            <p className="mt-2">Les échanges sont traités par l'API de Google et ne sont pas conservés par Avocat de Poche.</p>
           </section>
 
           <section aria-labelledby="propriete">

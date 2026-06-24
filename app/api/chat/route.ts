@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
+import { generateText } from "@/lib/llm";
 import {
   buildSystemPrompt,
   buildLetterPrompt,
@@ -50,7 +50,6 @@ const ChatBodySchema = z.object({
 type ChatBody = z.infer<typeof ChatBodySchema>;
 type ClientMessage = z.infer<typeof ClientMessageSchema>;
 
-const MODEL = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-6";
 const MAX_RAG_ARTICLES = 8;
 
 function lastUserMessage(messages: ClientMessage[]): string | null {
@@ -58,6 +57,38 @@ function lastUserMessage(messages: ClientMessage[]): string | null {
     if (messages[i].role === "user") return messages[i].content;
   }
   return null;
+}
+
+/**
+ * Réponse de secours sans LLM : utilisée quand le modèle gratuit est saturé.
+ * On présente directement les sources officielles trouvées par le RAG — toujours
+ * informatif, jamais d'erreur côté utilisateur.
+ */
+function fallbackReply(articles: RetrievedArticle[]): string {
+  if (articles.length === 0) {
+    return [
+      "Le service de rédaction est momentanément très sollicité et je n'ai pas pu trouver de référence précise à votre situation.",
+      "",
+      "Pour une réponse fiable et immédiate, vous pouvez contacter un **point-justice** (consultation gratuite) ou appeler le **3039** (Allô Service Public).",
+      "",
+      "N'hésitez pas à reformuler votre question dans un instant.",
+    ].join("\n");
+  }
+  const top = articles.slice(0, 4);
+  const list = top
+    .map((a) => {
+      const extrait = a.content.trim().replace(/\s+/g, " ").slice(0, 280);
+      const lien = a.source_url ? `\n  [Consulter la source officielle](${a.source_url})` : "";
+      return `**${a.reference}** — *${a.code}*\n${extrait}…${lien}`;
+    })
+    .join("\n\n");
+  return [
+    "Le service de rédaction détaillée est momentanément très sollicité. En attendant, voici les **sources officielles** les plus pertinentes pour votre situation :",
+    "",
+    list,
+    "",
+    "Reformulez votre question dans un instant pour obtenir une explication rédigée.",
+  ].join("\n");
 }
 
 function ragQueryFromMessages(messages: ClientMessage[]): string {
@@ -83,9 +114,9 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  if (!process.env.ANTHROPIC_API_KEY) {
+  if (!process.env.GEMINI_API_KEY) {
     return NextResponse.json(
-      { error: "ANTHROPIC_API_KEY manquant côté serveur." },
+      { error: "GEMINI_API_KEY manquant côté serveur." },
       { status: 500 }
     );
   }
@@ -107,8 +138,6 @@ export async function POST(req: NextRequest) {
   const body: ChatBody = parsed.data;
   const { messages, mode, domain, codeSlug } = body;
 
-  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-
   try {
     // ─── Mode CHAT : RAG + LLM ──────────────────────────────────────────
     if (mode === "chat") {
@@ -127,23 +156,17 @@ export async function POST(req: NextRequest) {
         console.warn("[api/chat] RAG indisponible :", (ragErr as Error).message);
       }
 
-      const conversation: Anthropic.MessageParam[] = messages.map((m) => ({
-        role: m.role,
-        content: m.content,
-      }));
-
-      const completion = await client.messages.create({
-        model: MODEL,
-        max_tokens: 1500,
-        system: buildSystemPrompt(articles),
-        messages: conversation,
-      });
-
-      const reply =
-        completion.content
-          .filter((b): b is Anthropic.TextBlock => b.type === "text")
-          .map((b) => b.text)
-          .join("\n") || "";
+      // Résilience : si le LLM gratuit est saturé (503 « high demand »), on ne
+      // renvoie PAS d'erreur — on construit une réponse de secours à partir des
+      // sources officielles déjà trouvées. L'utilisateur a toujours une réponse.
+      let reply: string;
+      try {
+        reply = await generateText(buildSystemPrompt(articles), messages, 1500);
+        if (!reply.trim()) reply = fallbackReply(articles);
+      } catch (llmErr) {
+        console.warn("[api/chat] LLM indisponible :", (llmErr as Error).message);
+        reply = fallbackReply(articles);
+      }
 
       return NextResponse.json({
         reply,
@@ -162,20 +185,11 @@ export async function POST(req: NextRequest) {
         .map((m) => `${m.role === "user" ? "Utilisateur" : "Avocat de Poche"} : ${m.content}`)
         .join("\n\n");
 
-      const out = await client.messages.create({
-        model: MODEL,
-        max_tokens: 2048,
-        system: buildLetterPrompt(ctx, domain),
-        messages: [
-          { role: "user", content: "Rédige la lettre maintenant au format markdown." },
-        ],
-      });
-
-      const letter =
-        out.content
-          .filter((b): b is Anthropic.TextBlock => b.type === "text")
-          .map((b) => b.text)
-          .join("\n") || "";
+      const letter = await generateText(
+        buildLetterPrompt(ctx, domain),
+        [{ role: "user", content: "Rédige la lettre maintenant au format markdown." }],
+        2048,
+      );
 
       return NextResponse.json({ letter });
     }
@@ -186,20 +200,11 @@ export async function POST(req: NextRequest) {
         .map((m) => `${m.role === "user" ? "Utilisateur" : "Avocat de Poche"} : ${m.content}`)
         .join("\n\n");
 
-      const out = await client.messages.create({
-        model: MODEL,
-        max_tokens: 400,
-        system: buildSpecialtyPrompt(ctx, domain),
-        messages: [
-          { role: "user", content: "Analyse et renvoie le JSON de spécialité." },
-        ],
-      });
-
-      const raw =
-        out.content
-          .filter((b): b is Anthropic.TextBlock => b.type === "text")
-          .map((b) => b.text)
-          .join("\n") || "";
+      const raw = await generateText(
+        buildSpecialtyPrompt(ctx, domain),
+        [{ role: "user", content: "Analyse et renvoie le JSON de spécialité." }],
+        400,
+      );
 
       const jsonMatch = raw.match(/\{[\s\S]*\}/);
       let parsed: { specialty: string; label: string; keywords: string[]; reason: string } | null = null;
@@ -239,20 +244,11 @@ export async function POST(req: NextRequest) {
         console.warn("[api/chat handoff] RAG indisponible :", (ragErr as Error).message);
       }
 
-      const out = await client.messages.create({
-        model: MODEL,
-        max_tokens: 1800,
-        system: buildHandoffPrompt(ctx, formatArticlesForPrompt(articles), domain),
-        messages: [
-          { role: "user", content: "Rédige le dossier pré-analysé maintenant." },
-        ],
-      });
-
-      const summary =
-        out.content
-          .filter((b): b is Anthropic.TextBlock => b.type === "text")
-          .map((b) => b.text)
-          .join("\n") || "";
+      const summary = await generateText(
+        buildHandoffPrompt(ctx, formatArticlesForPrompt(articles), domain),
+        [{ role: "user", content: "Rédige le dossier pré-analysé maintenant." }],
+        1800,
+      );
 
       return NextResponse.json({
         summary,

@@ -94,7 +94,7 @@ export default function CGU() {
 
           <section aria-labelledby="ia-cgu">
             <h2 id="ia-cgu" className="font-serif text-xl font-semibold text-midnight-900 mb-3">7. Service d'IA — limites et responsabilité</h2>
-            <p>Le chatbot est alimenté par un modèle d'intelligence artificielle (Claude, Anthropic). Les réponses générées sont probabilistes et peuvent contenir des inexactitudes. L'éditeur ne garantit pas l'exhaustivité, l'exactitude ou l'actualité des informations produites.</p>
+            <p>Le chatbot est alimenté par un modèle d'intelligence artificielle (Gemini, Google). Les réponses générées sont probabilistes et peuvent contenir des inexactitudes. L'éditeur ne garantit pas l'exhaustivité, l'exactitude ou l'actualité des informations produites.</p>
             <p className="mt-2">En cas de doute, l'utilisateur est invité à vérifier les informations sur <a href="https://www.legifrance.gouv.fr" target="_blank" rel="noopener noreferrer" className="underline hover:text-midnight-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass-500 rounded">Légifrance</a>.</p>
           </section>
 

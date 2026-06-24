@@ -12,7 +12,11 @@
     "ingest:hf": "tsx scripts/ingest-hf.ts",
     "ingest:hf:dry": "tsx scripts/ingest-hf.ts --dry-run",
     "embed": "tsx scripts/embed-seeds.ts",
-    "download:legi": "bash scripts/download-legi.sh"
+    "download:legi": "bash scripts/download-legi.sh",
+    "download:sp": "bash scripts/download-sp.sh",
+    "ingest:sp": "tsx scripts/ingest-service-public.ts",
+    "ingest:sp:dry": "tsx scripts/ingest-service-public.ts --dry-run",
+    "reembed": "tsx scripts/reembed.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.32.1",

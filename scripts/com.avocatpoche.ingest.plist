@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.avocatpoche.ingest</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/superbot/Projects/avocat-de-poche/scripts/auto-ingest.sh</string>
+    </array>
+
+    <!-- Chaque jour à 9h35 (juste après le reset du quota Gemini à minuit Pacific).
+         Si le Mac est endormi/éteint à cette heure, launchd lance au réveil. -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>9</integer>
+        <key>Minute</key>
+        <integer>35</integer>
+    </dict>
+
+    <key>RunAtLoad</key>
+    <false/>
+
+    <key>StandardOutPath</key>
+    <string>/Users/superbot/sp-data/auto-ingest.out.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/superbot/sp-data/auto-ingest.err.log</string>
+
+    <!-- Basse priorité : ne pas pénaliser la machine (MacBook Air i3). -->
+    <key>Nice</key>
+    <integer>10</integer>
+    <key>ProcessType</key>
+    <string>Background</string>
+</dict>
+</plist>

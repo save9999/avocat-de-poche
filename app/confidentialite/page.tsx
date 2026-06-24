@@ -74,7 +74,7 @@ export default function Confidentialite() {
             <p>Notre hébergeur Vercel collecte automatiquement des données techniques minimales : adresse IP anonymisée, type de navigateur, pages consultées, durée de session. Ces données sont utilisées uniquement à des fins de sécurité et de performance. Elles ne sont pas accessibles à l'éditeur d'Avocat de Poche.</p>
 
             <h3 className="font-semibold text-midnight-900 mb-2 mt-4">2.2 Conversations avec le chatbot</h3>
-            <p>Les messages que vous échangez avec l'assistant IA sont transmis à l'API Claude (Anthropic) pour générer une réponse. <strong>Avocat de Poche ne stocke, n'enregistre ni n'analyse aucun message</strong>. Les conversations ne sont jamais associées à une identité.</p>
+            <p>Les messages que vous échangez avec l'assistant IA sont transmis à l'API Gemini (Google) pour générer une réponse. <strong>Avocat de Poche ne stocke, n'enregistre ni n'analyse aucun message</strong>. Les conversations ne sont jamais associées à une identité.</p>
             <p className="mt-2">Les échanges sont traités uniquement en mémoire vive (RAM) pendant la durée de la session. À la fermeture de la page, tout est effacé définitivement côté Avocat de Poche.</p>
 
             <h3 className="font-semibold text-midnight-900 mb-2 mt-4">2.3 Aucune donnée personnelle directe</h3>
@@ -102,19 +102,20 @@ export default function Confidentialite() {
             <p className="mt-2">Lors d'une conversation sur le harcèlement scolaire, un utilisateur peut mentionner des données sensibles (discrimination, orientation sexuelle, handicap…). Nous attirons votre attention sur ce point :</p>
             <ul className="mt-2 ml-5 list-disc space-y-1 text-sm">
               <li>Avocat de Poche ne stocke jamais ces informations</li>
-              <li>Les messages sont transmis à Anthropic uniquement pour générer une réponse immédiate</li>
+              <li>Les messages sont transmis à Google (API Gemini) uniquement pour générer une réponse immédiate</li>
               <li>Évitez de mentionner des informations d'identification (nom, école, ville précise) dans le chat</li>
             </ul>
           </section>
 
-          <section aria-labelledby="anthropic">
-            <h2 id="anthropic" className="font-serif text-xl font-semibold text-midnight-900 mb-3">5. Sous-traitant : Anthropic (Claude API)</h2>
-            <p>Les messages transmis au chatbot sont envoyés à <strong>Anthropic, PBC</strong> (548 Market St PMB 90375, San Francisco, CA 94104, USA) via leur API.</p>
-            <p className="mt-2">Selon la politique d'utilisation des données d'Anthropic :</p>
+          <section aria-labelledby="google">
+            <h2 id="google" className="font-serif text-xl font-semibold text-midnight-900 mb-3">5. Sous-traitant : Google (API Gemini)</h2>
+            <p>Les messages transmis au chatbot sont envoyés à <strong>Google LLC</strong> (1600 Amphitheatre Parkway, Mountain View, CA 94043, USA) via l'API Gemini, pour la recherche dans les textes officiels et la génération de la réponse.</p>
+            <p className="mt-2">Selon la politique d'utilisation des données de l'API Google Gemini :</p>
             <ul className="mt-2 ml-5 list-disc space-y-1 text-sm">
-              <li>Les données des clients API ne sont pas utilisées pour entraîner les modèles sans consentement explicite</li>
-              <li>Les échanges API sont soumis à leur <a href="https://www.anthropic.com/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-midnight-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass-500 rounded">politique de confidentialité</a></li>
-              <li>Anthropic est certifié conforme aux normes de sécurité SOC 2 Type II</li>
+              <li>Les conversations sont transmises de façon anonyme, sans aucune donnée permettant de vous identifier</li>
+              <li>Les échanges API sont soumis à la <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-midnight-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass-500 rounded">politique de confidentialité de Google</a> et aux <a href="https://ai.google.dev/gemini-api/terms" target="_blank" rel="noopener noreferrer" className="underline hover:text-midnight-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass-500 rounded">conditions de l'API Gemini</a></li>
+              <li>Ne communiquez jamais d'informations permettant de vous identifier (nom, adresse, coordonnées) dans vos messages</li>
+              <li>Google est certifié conforme aux normes de sécurité SOC 2, ISO 27001 et 27018</li>
             </ul>
             <p className="mt-2">Compte tenu du transfert vers les États-Unis, des clauses contractuelles types (CCT) sont applicables conformément à l'article 46 du RGPD.</p>
           </section>
@@ -148,7 +149,7 @@ export default function Confidentialite() {
 
           <section aria-labelledby="securite">
             <h2 id="securite" className="font-serif text-xl font-semibold text-midnight-900 mb-3">8. Sécurité</h2>
-            <p>Le site utilise le protocole HTTPS (TLS 1.3) pour toutes les communications. Les échanges entre votre navigateur et l'API d'Anthropic sont chiffrés de bout en bout.</p>
+            <p>Le site utilise le protocole HTTPS (TLS 1.3) pour toutes les communications. Les échanges avec l'API de Google sont chiffrés en transit.</p>
             <p className="mt-2">Le code source de l'application est régulièrement audité pour détecter d'éventuelles failles de sécurité.</p>
           </section>
 
