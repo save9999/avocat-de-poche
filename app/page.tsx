@@ -139,6 +139,7 @@ export default function LandingPage() {
           </Link>
           <nav className="hidden items-center gap-8 sm:flex" aria-label="Navigation principale">
             <a href="#domaines" className="text-sm text-midnight-600 transition hover:text-midnight-900">Domaines</a>
+            <Link href="/droits" className="text-sm text-midnight-600 transition hover:text-midnight-900">Vos droits</Link>
             <a href="#comment-ca-marche" className="text-sm text-midnight-600 transition hover:text-midnight-900">Comment ça marche</a>
             <a href="#faq" className="text-sm text-midnight-600 transition hover:text-midnight-900">FAQ</a>
           </nav>
@@ -453,6 +454,7 @@ export default function LandingPage() {
             <div>
               <h4 className="mb-3 text-[11px] font-semibold uppercase tracking-eyebrow text-midnight-500">Légal</h4>
               <ul className="space-y-2 text-sm">
+                <li><Link href="/droits" className="text-midnight-300 transition hover:text-white">Vos droits de A à Z</Link></li>
                 <li><Link href="/confidentialite" className="text-midnight-300 transition hover:text-white">Confidentialité</Link></li>
                 <li><Link href="/mentions-legales" className="text-midnight-300 transition hover:text-white">Mentions légales</Link></li>
                 <li><Link href="/cgu" className="text-midnight-300 transition hover:text-white">CGU</Link></li>

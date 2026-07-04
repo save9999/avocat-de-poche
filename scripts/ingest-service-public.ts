@@ -164,22 +164,24 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
   auth: { persistSession: false },
 });
 
-async function upsertWithEmbeddings(rows: PendingRow[], dryRun: boolean) {
+async function upsertWithEmbeddings(rows: PendingRow[], dryRun: boolean, noEmbed = false) {
   if (rows.length === 0) return;
   if (dryRun) {
     console.log(`   ↳ dry-run : ${rows.length} fiches prêtes (skip embed + upsert)`);
     return;
   }
   const embeddings: number[][] = [];
-  for (let i = 0; i < rows.length; i += BATCH_EMBED) {
-    const slice = rows.slice(i, i + BATCH_EMBED);
-    const texts = slice.map((r) => `${r.reference} (${r.code})\n\n${r.content}`);
-    embeddings.push(...(await embedBatch(texts)));
-    if (i + BATCH_EMBED < rows.length) await new Promise((r) => setTimeout(r, EMBED_PAUSE_MS));
+  if (!noEmbed) {
+    for (let i = 0; i < rows.length; i += BATCH_EMBED) {
+      const slice = rows.slice(i, i + BATCH_EMBED);
+      const texts = slice.map((r) => `${r.reference} (${r.code})\n\n${r.content}`);
+      embeddings.push(...(await embedBatch(texts)));
+      if (i + BATCH_EMBED < rows.length) await new Promise((r) => setTimeout(r, EMBED_PAUSE_MS));
+    }
   }
   const payload = rows.map((r, i) => ({
     ...r,
-    embedding: embeddings[i],
+    embedding: noEmbed ? null : embeddings[i],
     token_count: Math.ceil(r.content.length / 4),
   }));
   for (let i = 0; i < payload.length; i += BATCH_UPSERT) {
@@ -196,23 +198,24 @@ async function upsertWithEmbeddings(rows: PendingRow[], dryRun: boolean) {
 // ── CLI ──────────────────────────────────────────────────────────────────
 function parseArgs() {
   const args = process.argv.slice(2);
-  const out: { dryRun?: boolean; limit?: number; prefix?: string } = {};
+  const out: { dryRun?: boolean; limit?: number; prefix?: string; noEmbed?: boolean } = {};
   for (let i = 0; i < args.length; i++) {
     if (args[i] === "--dry-run") out.dryRun = true;
     else if (args[i] === "--limit") out.limit = parseInt(args[++i], 10);
     else if (args[i] === "--prefix") out.prefix = args[++i].toUpperCase();
+    else if (args[i] === "--no-embed") out.noEmbed = true;
   }
   return out;
 }
 
 async function main() {
-  const { dryRun, limit, prefix } = parseArgs();
+  const { dryRun, limit, prefix, noEmbed } = parseArgs();
 
   // Mode free tier : le mur est le quota de REQUÊTES PAR JOUR (RPD), pas la
   // vitesse. On maximise donc le nombre de fiches par requête (gros budget de
   // tokens, juste sous le TPM ~30K) pour minimiser le nombre d'appels, et on
   // cadence pour rester sous le TPM. Désactivable par --fast (facturation Gemini).
-  if (!process.argv.includes("--fast")) {
+  if (!process.argv.includes("--fast") && !noEmbed) {
     process.env.EMBED_TOKEN_BUDGET ||= "25000";
     process.env.EMBED_SUBBATCH_PAUSE_MS ||= "55000";
     console.log("   ⏳ mode free tier : ~12 fiches/appel (budget 25K) / pause 55s — minimise les requêtes/jour\n");
@@ -266,7 +269,7 @@ async function main() {
   let done = 0;
   for (let i = 0; i < toProcess.length; i += BATCH_UPSERT) {
     const batch = toProcess.slice(i, i + BATCH_UPSERT);
-    await upsertWithEmbeddings(batch, Boolean(dryRun));
+    await upsertWithEmbeddings(batch, Boolean(dryRun), Boolean(noEmbed));
     done += batch.length;
     const rate = done / ((Date.now() - startedAt) / 1000 || 1);
     console.log(`   ✓ ${done}/${toProcess.length} ingérées (${rate.toFixed(1)}/s)`);
