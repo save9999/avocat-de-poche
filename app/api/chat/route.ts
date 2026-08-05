@@ -155,7 +155,7 @@ export async function POST(req: NextRequest) {
           });
         }
       } catch (ragErr) {
-        // Le RAG peut échouer (Supabase down, OpenAI down, base vide…) — on dégrade gracieusement.
+        // Le RAG peut échouer (base injoignable, OpenAI down, base vide…) — on dégrade gracieusement.
         console.warn("[api/chat] RAG indisponible :", (ragErr as Error).message);
       }
 

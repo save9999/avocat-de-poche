@@ -1,9 +1,9 @@
 import "server-only";
-import { getSupabaseServer } from "@/lib/supabase";
+import { interroger, premiereLigne } from "@/lib/db";
 
 /**
  * Accès aux fiches Service-Public.fr (code = 'Service-Public.fr') pour les
- * pages SEO /droits. Lecture via le client anonyme (RLS lecture publique).
+ * pages SEO /droits.
  *
  * URL canonique d'une fiche : /droits/<slug(reference)>-<id> (ex. f10).
  * L'identifiant DILA en fin de slug est la clé de lookup : le libellé peut
@@ -23,12 +23,11 @@ export interface Fiche extends FicheSummary {
 }
 
 const CODE_SP = "Service-Public.fr";
-const PAGE = 1000; // plafond de lignes par requête PostgREST
 
 export function slugifyReference(reference: string): string {
   return reference
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[̀-ͯ]/g, "")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
@@ -47,13 +46,13 @@ export function cidFromSlug(slug: string): string | null {
 }
 
 export async function getFiche(cid: string): Promise<Fiche | null> {
-  const { data } = await getSupabaseServer()
-    .from("legal_articles")
-    .select("cid, reference, title, content, domains, source_url")
-    .eq("code", CODE_SP)
-    .eq("cid", cid)
-    .maybeSingle();
-  return (data as Fiche | null) ?? null;
+  return premiereLigne<Fiche>(
+    `select cid, reference, title, content, domains, source_url
+       from public.legal_articles
+      where code = $1 and cid = $2
+      limit 1`,
+    [CODE_SP, cid]
+  );
 }
 
 export async function getRelated(
@@ -62,60 +61,47 @@ export async function getRelated(
   limit = 6
 ): Promise<FicheSummary[]> {
   if (domains.length === 0) return [];
-  const { data } = await getSupabaseServer()
-    .from("legal_articles")
-    .select("cid, reference, title, domains")
-    .eq("code", CODE_SP)
-    .overlaps("domains", domains)
-    .neq("cid", excludeCid)
-    .order("cid")
-    .limit(limit);
-  return (data as FicheSummary[] | null) ?? [];
+  return interroger<FicheSummary>(
+    `select cid, reference, title, domains
+       from public.legal_articles
+      where code = $1 and domains && $2::text[] and cid <> $3
+      order by cid
+      limit $4`,
+    [CODE_SP, domains, excludeCid, limit]
+  );
 }
 
 export async function listByDomain(domain: string): Promise<FicheSummary[]> {
-  const out: FicheSummary[] = [];
-  for (let from = 0; ; from += PAGE) {
-    const { data } = await getSupabaseServer()
-      .from("legal_articles")
-      .select("cid, reference, title, domains")
-      .eq("code", CODE_SP)
-      .contains("domains", [domain])
-      .order("reference")
-      .range(from, from + PAGE - 1);
-    const rows = (data as FicheSummary[] | null) ?? [];
-    out.push(...rows);
-    if (rows.length < PAGE) break;
-  }
-  return out;
+  return interroger<FicheSummary>(
+    `select cid, reference, title, domains
+       from public.legal_articles
+      where code = $1 and domains @> array[$2]::text[]
+      order by reference`,
+    [CODE_SP, domain]
+  );
 }
 
 export async function countByDomain(domain: string): Promise<number> {
-  const { count } = await getSupabaseServer()
-    .from("legal_articles")
-    .select("cid", { count: "exact", head: true })
-    .eq("code", CODE_SP)
-    .contains("domains", [domain]);
-  return count ?? 0;
+  const ligne = await premiereLigne<{ n: number }>(
+    `select count(*)::int as n
+       from public.legal_articles
+      where code = $1 and domains @> array[$2]::text[]`,
+    [CODE_SP, domain]
+  );
+  return ligne?.n ?? 0;
 }
 
 /** Toutes les fiches (cid + reference), pour le sitemap. */
 export async function listAllFiches(): Promise<
   Array<Pick<FicheSummary, "cid" | "reference">>
 > {
-  const out: Array<Pick<FicheSummary, "cid" | "reference">> = [];
-  for (let from = 0; ; from += PAGE) {
-    const { data } = await getSupabaseServer()
-      .from("legal_articles")
-      .select("cid, reference")
-      .eq("code", CODE_SP)
-      .order("cid")
-      .range(from, from + PAGE - 1);
-    const rows = (data as Array<Pick<FicheSummary, "cid" | "reference">> | null) ?? [];
-    out.push(...rows);
-    if (rows.length < PAGE) break;
-  }
-  return out;
+  return interroger<Pick<FicheSummary, "cid" | "reference">>(
+    `select cid, reference
+       from public.legal_articles
+      where code = $1
+      order by cid`,
+    [CODE_SP]
+  );
 }
 
 /** Domaines exposés en pages thématiques (les 6 de l'app + 2 issus des fiches). */

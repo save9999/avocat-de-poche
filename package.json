@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.32.1",
-    "@supabase/supabase-js": "^2.45.4",
+    "@neondatabase/serverless": "^1.1.0",
     "hyparquet": "^1.26.0",
     "next": "^14.2.35",
     "react": "^18.3.1",

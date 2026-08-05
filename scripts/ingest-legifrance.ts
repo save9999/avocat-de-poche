@@ -8,7 +8,7 @@
  *
  * Usage :
  *   1. Télécharger + extraire le dump  →  ~/legi/
- *   2. Configurer .env.local (SUPABASE_*, OPENAI_API_KEY)
+ *   2. Configurer .env.local (DATABASE_URL, OPENAI_API_KEY)
  *   3. npm run ingest -- --dir ~/legi --codes code_civil,code_penal
  *      (ou sans --codes pour ingérer TOUS les codes en vigueur)
  *
@@ -17,7 +17,7 @@
  *   - extrait id (cid), numéro, contenu, état, dates, code parent
  *   - dérive automatiquement un ou plusieurs `domains` (heuristique mots-clés)
  *   - embed par batch OpenAI text-embedding-3-small
- *   - upsert dans Supabase (idempotent par `cid`)
+ *   - upsert dans Neon (idempotent par `cid`)
  *
  * Coût indicatif : ~5 USD pour ~250 000 articles, ~3-5 h sur ADSL.
  */
@@ -25,7 +25,7 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { XMLParser } from "fast-xml-parser";
-import { createClient } from "@supabase/supabase-js";
+import { upsertArticles } from "./_db";
 import { config as loadEnv } from "dotenv";
 
 loadEnv({ path: ".env.local" });
@@ -35,14 +35,8 @@ const BATCH_EMBED = 96;        // OpenAI accepte jusqu'à 2048 mais batch raison
 const BATCH_UPSERT = 200;
 const MAX_CHARS_PER_ARTICLE = 12000; // tronque les articles fleuves
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
-if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-  console.error("✖ NEXT_PUBLIC_SUPABASE_URL ou SUPABASE_SERVICE_ROLE_KEY manquant.");
-  process.exit(1);
-}
 if (!OPENAI_API_KEY) {
   console.error("✖ OPENAI_API_KEY manquant.");
   process.exit(1);
@@ -67,10 +61,6 @@ function parseArgs() {
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-  auth: { persistSession: false },
-});
-
 const xmlParser = new XMLParser({
   ignoreAttributes: false,
   attributeNamePrefix: "@_",
@@ -326,14 +316,7 @@ async function flush(rows: PendingRow[], dryRun: boolean) {
   }
 
   for (let i = 0; i < payload.length; i += BATCH_UPSERT) {
-    const slice = payload.slice(i, i + BATCH_UPSERT);
-    const { error } = await supabase
-      .from("legal_articles")
-      .upsert(slice, { onConflict: "cid" });
-    if (error) {
-      console.error("   ✖ upsert error :", error.message);
-      throw error;
-    }
+    await upsertArticles(payload.slice(i, i + BATCH_UPSERT));
   }
 }
 
