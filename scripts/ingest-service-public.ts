@@ -13,7 +13,7 @@
  * Pré-requis :
  *   1. Télécharger + dézipper l'archive : `npm run download:sp`
  *      (remplit ~/sp-data/fiches/*.xml)
- *   2. .env.local : VOYAGE_API_KEY + SUPABASE_SERVICE_ROLE_KEY + NEXT_PUBLIC_SUPABASE_URL
+ *   2. .env.local : VOYAGE_API_KEY + DATABASE_URL
  *
  * Usage :
  *   npm run ingest:sp                      → toutes les fiches F + R
@@ -28,7 +28,7 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import os from "node:os";
-import { createClient } from "@supabase/supabase-js";
+import { sql, upsertArticles } from "./_db";
 import { config as loadEnv } from "dotenv";
 
 loadEnv({ path: ".env.local" });
@@ -43,13 +43,7 @@ const BATCH_UPSERT = 200;
 const MAX_CHARS = 12000; // texte stocké
 const MIN_CONTENT_CHARS = 200; // en-dessous = fiche de navigation vide → skip
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-  console.error("✖ NEXT_PUBLIC_SUPABASE_URL ou SUPABASE_SERVICE_ROLE_KEY manquant.");
-  process.exit(1);
-}
 if (!process.env.GEMINI_API_KEY) {
   console.error("✖ GEMINI_API_KEY manquant.");
   process.exit(1);
@@ -159,11 +153,7 @@ function parseFiche(xml: string, fileId: string): PendingRow | null {
   };
 }
 
-// ── Supabase ─────────────────────────────────────────────────────────────
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-  auth: { persistSession: false },
-});
-
+// ── Base ─────────────────────────────────────────────────────────────────
 async function upsertWithEmbeddings(rows: PendingRow[], dryRun: boolean, noEmbed = false) {
   if (rows.length === 0) return;
   if (dryRun) {
@@ -185,13 +175,7 @@ async function upsertWithEmbeddings(rows: PendingRow[], dryRun: boolean, noEmbed
     token_count: Math.ceil(r.content.length / 4),
   }));
   for (let i = 0; i < payload.length; i += BATCH_UPSERT) {
-    const { error } = await supabase
-      .from("legal_articles")
-      .upsert(payload.slice(i, i + BATCH_UPSERT), { onConflict: "cid" });
-    if (error) {
-      console.error("   ✖ upsert :", error.message);
-      throw error;
-    }
+    await upsertArticles(payload.slice(i, i + BATCH_UPSERT));
   }
 }
 
@@ -253,11 +237,11 @@ async function main() {
     const already = new Set<string>();
     const cids = pending.map((p) => p.cid);
     for (let i = 0; i < cids.length; i += 1000) {
-      const { data } = await supabase
-        .from("legal_articles")
-        .select("cid")
-        .in("cid", cids.slice(i, i + 1000));
-      (data ?? []).forEach((r: { cid: string }) => already.add(r.cid));
+      const data = await sql<{ cid: string }>(
+        `select cid from public.legal_articles where cid = any($1::text[])`,
+        [cids.slice(i, i + 1000)],
+      );
+      data.forEach((r) => already.add(r.cid));
     }
     if (already.size > 0) {
       toProcess = pending.filter((p) => !already.has(p.cid));

@@ -1,4 +1,4 @@
-import { getSupabaseServer } from "./supabase";
+import { interroger } from "./db";
 import { embedQuery } from "./embeddings";
 
 export interface RetrievedArticle {
@@ -31,21 +31,21 @@ export async function retrieveArticles(
   } = opts;
 
   const queryEmbedding = await embedQuery(query);
-  const supabase = getSupabaseServer();
 
-  const { data, error } = await supabase.rpc("match_articles", {
-    query_embedding: queryEmbedding,
-    match_count: matchCount,
-    domain_filter: domain,
-    code_filter: codeSlug,
-    min_similarity: minSimilarity,
-  });
-
-  if (error) {
-    throw new Error(`Supabase match_articles : ${error.message}`);
-  }
-
-  return (data as RetrievedArticle[]) || [];
+  // Le vecteur voyage en texte : c'est la représentation que pgvector attend
+  // en entrée, et le pilote HTTP n'a pas de type dédié à lui donner.
+  return interroger<RetrievedArticle>(
+    // `id` est un bigint, que le pilote rendrait en texte sans ce cast.
+    `select id::int as id, cid, code, reference, title, content, source_url, similarity
+       from public.match_articles($1::vector, $2, $3, $4, $5)`,
+    [
+      `[${queryEmbedding.join(",")}]`,
+      matchCount,
+      domain,
+      codeSlug,
+      minSimilarity,
+    ]
+  );
 }
 
 export function formatArticlesForPrompt(articles: RetrievedArticle[]): string {

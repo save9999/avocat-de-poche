@@ -9,7 +9,7 @@
  *   `erdal/legifrance` agrège la base complète, code par code.
  *
  * Usage :
- *   1. .env.local doit contenir GEMINI_API_KEY + SUPABASE_SERVICE_ROLE_KEY
+ *   1. .env.local doit contenir GEMINI_API_KEY + DATABASE_URL
  *   2. npm run ingest:hf                          → 10 codes par défaut
  *      npm run ingest:hf -- --codes code-civil    → un sous-ensemble
  *      npm run ingest:hf -- --dry-run             → sans embeddings/upsert
@@ -21,7 +21,7 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import os from "node:os";
-import { createClient } from "@supabase/supabase-js";
+import { sql, upsertArticles } from "./_db";
 import { config as loadEnv } from "dotenv";
 
 // hyparquet est ESM-only — chargement dynamique pour rester compatible tsx CJS.
@@ -51,14 +51,8 @@ const MAX_CHARS = 12000;
 const MAX_EMBED_CHARS = 7000;
 const CACHE_DIR = path.join(os.homedir(), "legi-hf");
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const VOYAGE_API_KEY = process.env.VOYAGE_API_KEY;
 
-if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-  console.error("✖ NEXT_PUBLIC_SUPABASE_URL ou SUPABASE_SERVICE_ROLE_KEY manquant.");
-  process.exit(1);
-}
 if (!VOYAGE_API_KEY) {
   console.error("✖ VOYAGE_API_KEY manquant.");
   process.exit(1);
@@ -145,11 +139,6 @@ function parseArgs() {
   }
   return out;
 }
-
-// ── Supabase ─────────────────────────────────────────────────────────────
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-  auth: { persistSession: false },
-});
 
 // ── Download ────────────────────────────────────────────────────────────
 async function ensureLocalParquet(codeSlug: string): Promise<string> {
@@ -315,14 +304,7 @@ async function flush(rows: PendingRow[], dryRun: boolean, noEmbed: boolean) {
   }));
 
   for (let i = 0; i < payload.length; i += BATCH_UPSERT) {
-    const slice = payload.slice(i, i + BATCH_UPSERT);
-    const { error } = await supabase
-      .from("legal_articles")
-      .upsert(slice, { onConflict: "cid" });
-    if (error) {
-      console.error("   ✖ upsert error :", error.message);
-      throw error;
-    }
+    await upsertArticles(payload.slice(i, i + BATCH_UPSERT));
   }
 }
 
@@ -372,13 +354,12 @@ async function main() {
       const already = new Set<string>();
       const allCids = pending.map((p) => p.cid);
       for (let i = 0; i < allCids.length; i += 1000) {
-        // NB : pas de filtre `embedding is not null` — PostgREST ne gère pas
-      // `is null` sur une colonne vector. Tout cid présent a été upserté avec embedding.
-      const { data } = await supabase
-          .from("legal_articles")
-          .select("cid")
-          .in("cid", allCids.slice(i, i + 1000));
-        (data ?? []).forEach((row: { cid: string }) => already.add(row.cid));
+        const data = await sql<{ cid: string }>(
+          `select cid from public.legal_articles
+             where cid = any($1::text[]) and embedding is not null`,
+          [allCids.slice(i, i + 1000)],
+        );
+        data.forEach((row) => already.add(row.cid));
       }
       if (already.size > 0) {
         toProcess = pending.filter((p) => !already.has(p.cid));

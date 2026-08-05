@@ -13,30 +13,20 @@
  * Usage : npm run reembed
  */
 
-import { createClient } from "@supabase/supabase-js";
+import { sql } from "./_db";
 import { config as loadEnv } from "dotenv";
 
 loadEnv({ path: ".env.local" });
 
 import { embedBatch } from "../lib/embeddings";
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-  console.error("✖ NEXT_PUBLIC_SUPABASE_URL ou SUPABASE_SERVICE_ROLE_KEY manquant.");
-  process.exit(1);
-}
 if (!process.env.GEMINI_API_KEY) {
   console.error("✖ GEMINI_API_KEY manquant.");
   process.exit(1);
 }
 
 const BATCH = 50;
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-  auth: { persistSession: false },
-});
-
 interface Row {
   id: number;
   reference: string;
@@ -49,24 +39,25 @@ async function main() {
   let done = 0;
 
   for (;;) {
-    const { data, error } = await supabase.rpc("articles_missing_embedding", {
-      batch_limit: BATCH,
-    });
-    if (error) throw new Error(`articles_missing_embedding : ${error.message}`);
-    const rows = (data as Row[]) ?? [];
+    const rows = await sql<Row>(
+      `select id::int as id, reference, code, content
+         from public.articles_missing_embedding($1)`,
+      [BATCH],
+    );
     if (rows.length === 0) break;
 
     const texts = rows.map((r) => `${r.reference} (${r.code})\n\n${r.content}`);
     const embeddings = await embedBatch(texts);
 
-    // Update ligne par ligne (embedding unique par id).
-    await Promise.all(
-      rows.map((r, i) =>
-        supabase
-          .from("legal_articles")
-          .update({ embedding: embeddings[i] })
-          .eq("id", r.id),
-      ),
+    // Une requête par lot : `unnest` rapproche chaque vecteur de sa ligne.
+    await sql(
+      `update public.legal_articles as a
+          set embedding = v.embedding::vector, updated_at = now()
+         from (
+           select unnest($1::bigint[]) as id, unnest($2::text[]) as embedding
+         ) as v
+        where a.id = v.id`,
+      [rows.map((r) => r.id), embeddings.map((e) => `[${e.join(",")}]`)],
     );
 
     done += rows.length;

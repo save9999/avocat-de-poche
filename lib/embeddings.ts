@@ -1,6 +1,6 @@
 // Embeddings via l'API Google Gemini — modèle gemini-embedding-001.
 // Sortie ramenée à 768 dimensions (outputDimensionality), alignée sur la colonne
-// `embedding vector(768)` de Supabase.
+// `embedding vector(768)` de la base.
 // Choix motivé : le free tier Gemini (~100 RPM / 250K TPM) tient une classe
 // entière en simultané, contrairement à Voyage (3 RPM / 10K TPM).
 // taskType distingue RETRIEVAL_QUERY (recherche) et RETRIEVAL_DOCUMENT

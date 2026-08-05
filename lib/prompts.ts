@@ -11,7 +11,7 @@ function sanitizeUserContent(text: string): string {
 
 /**
  * Prompt système — positionnement "Traducteur de problèmes du quotidien
- * en langage juridique". Strictement RAG-only (Supabase pgvector).
+ * en langage juridique". Strictement RAG-only (pgvector).
  *
  * Aucune stratégie de défense personnalisée (monopole de l'avocat).
  * Aucun article inventé : si le contexte est vide, on le dit.
