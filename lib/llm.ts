@@ -6,12 +6,21 @@
 
 // Le free tier Gemini renvoie fréquemment des 503 « high demand » par à-coups.
 // On enchaîne plusieurs modèles en repli, chacun avec un retry court (le 503 se
-// résout généralement en quelques secondes).
-const MODELS = (process.env.GEMINI_CHAT_MODEL || "gemini-2.5-flash,gemini-2.0-flash")
+// résout généralement en quelques secondes). Les variantes -lite ont des quotas
+// journaliers gratuits (RPD) nettement plus élevés : quand les flash « pleins »
+// sont épuisés, l'app continue en qualité légèrement moindre au lieu de tomber
+// en mode dégradé.
+const MODELS = (
+  process.env.GEMINI_CHAT_MODEL ||
+  "gemini-2.5-flash,gemini-2.5-flash-lite,gemini-2.0-flash,gemini-2.0-flash-lite"
+)
   .split(",")
   .map((m) => m.trim())
   .filter(Boolean);
 const MAX_RETRY_PER_MODEL = 4;
+// Un 429 de quota journalier ne se résout pas en quelques secondes : un seul
+// retry, puis on passe au modèle suivant de la chaîne.
+const MAX_RETRY_429 = 1;
 
 export interface LlmMessage {
   role: "user" | "assistant";
@@ -45,7 +54,8 @@ async function callModel(
     }
     throw err;
   }
-  if ((res.status === 429 || res.status >= 500) && retry < MAX_RETRY_PER_MODEL) {
+  const maxRetry = res.status === 429 ? MAX_RETRY_429 : MAX_RETRY_PER_MODEL;
+  if ((res.status === 429 || res.status >= 500) && retry < maxRetry) {
     await sleep(1500 * (retry + 1)); // backoff linéaire court (503 transitoire)
     return callModel(model, apiKey, body, retry + 1);
   }

@@ -13,7 +13,7 @@
  * Pré-requis :
  *   1. Télécharger + dézipper l'archive : `npm run download:sp`
  *      (remplit ~/sp-data/fiches/*.xml)
- *   2. .env.local : VOYAGE_API_KEY + DATABASE_URL
+ *   2. .env.local : GEMINI_API_KEY + DATABASE_URL
  *
  * Usage :
  *   npm run ingest:sp                      → toutes les fiches F + R
@@ -22,7 +22,7 @@
  *   npm run ingest:sp -- --prefix F        → fiches F uniquement
  *
  * Le script est resume-safe : une relance saute les fiches déjà en base
- * (utile si le quota Voyage coupe en cours de route).
+ * (utile si le quota free tier Gemini coupe en cours de route).
  */
 
 import { promises as fs } from "node:fs";

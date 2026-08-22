@@ -53,11 +53,10 @@ function ChatPageInner() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [degraded, setDegraded] = useState(false);
+  const [limitReached, setLimitReached] = useState(false);
   const [planOpen, setPlanOpen] = useState(false);
   const [planTab, setPlanTab] = useState<PlanTab>("contacts");
-  const [specialtyLabel, setSpecialtyLabel] = useState<string | null>(null);
-  const hasAutoOpenedRef = useRef(false);
-
   const scrollRef = useRef<HTMLDivElement>(null);
   const lastInputRef = useRef<string>("");
   const userMessageCount = useMemo(
@@ -79,9 +78,9 @@ function ChatPageInner() {
     setDomain(next);
     setMessages([buildIntroMessage(next)]);
     setError(null);
+    setDegraded(false);
+    setLimitReached(false);
     setPlanOpen(false);
-    setSpecialtyLabel(null);
-    hasAutoOpenedRef.current = false;
     const params = new URLSearchParams(searchParams.toString());
     if (next) params.set("domain", next);
     else params.delete("domain");
@@ -114,7 +113,16 @@ function ChatPageInner() {
         body: JSON.stringify({ messages: apiPayload, mode: "chat", domain }),
       });
       const data = await res.json();
+      if (res.status === 429) {
+        // Limite horaire du service gratuit : message dédié, pas un écran d'erreur.
+        setLimitReached(true);
+        setMessages((prev) => prev.filter((m) => m !== userMsg));
+        setInput(trimmed);
+        return;
+      }
       if (!res.ok) throw new Error(data.error || `Erreur HTTP ${res.status}`);
+      setLimitReached(false);
+      setDegraded(Boolean(data.degraded));
 
       const sources: ChatSource[] = Array.isArray(data.sources)
         ? (data.sources as ChatSource[]).filter(
@@ -128,25 +136,6 @@ function ChatPageInner() {
         sources: sources.length > 0 ? sources : undefined,
       };
       setMessages((m) => [...m, assistantMsg]);
-
-      if (!hasAutoOpenedRef.current) {
-        hasAutoOpenedRef.current = true;
-        try {
-          const specRes = await fetch("/api/chat", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              messages: [...apiPayload, { role: "assistant", content: assistantMsg.content }].slice(-20),
-              mode: "specialty",
-              domain,
-            }),
-          });
-          if (specRes.ok) {
-            const specData = await specRes.json();
-            if (specData?.label) setSpecialtyLabel(specData.label);
-          }
-        } catch { /* silencieux */ }
-      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erreur réseau inconnue.");
     } finally {
@@ -237,6 +226,19 @@ function ChatPageInner() {
       {/* ── Conversation ── */}
       <main ref={scrollRef} className="scrollbar-thin flex-1 overflow-y-auto px-3 py-6 sm:px-6">
         <div className="mx-auto flex max-w-3xl flex-col gap-5">
+          {degraded && (
+            <div className="fade-in rounded-xl border border-brass-200 bg-brass-50 p-4 text-sm text-midnight-800">
+              <p>
+                <strong>Mode sources officielles</strong> — le service de rédaction
+                gratuit est momentanément saturé. Les réponses se limitent aux
+                textes officiels trouvés. Les{" "}
+                <Link href="/droits" className="font-medium underline hover:text-midnight-900">
+                  fiches pratiques
+                </Link>{" "}
+                restent disponibles en illimité.
+              </p>
+            </div>
+          )}
           {messages.map((m) => (
             <ChatMessage key={m.id} message={m} />
           ))}
@@ -245,7 +247,6 @@ function ChatPageInner() {
             <LawyerHandoff
               conversation={messages.filter((m) => m.id !== "intro")}
               domain={domain}
-              specialtyLabel={specialtyLabel}
               onOpenPlan={() => {
                 setPlanTab("lawyer");
                 setPlanOpen(true);
@@ -286,6 +287,20 @@ function ChatPageInner() {
                       </li>
                     ))}
               </ul>
+            </div>
+          )}
+          {limitReached && (
+            <div className="fade-in rounded-xl border border-brass-200 bg-brass-50 p-4 text-sm text-midnight-800">
+              <p>
+                <strong>Limite horaire atteinte</strong> — vous avez utilisé le
+                nombre maximal de questions gratuites pour cette heure. Votre
+                message est conservé ci-dessous : réessayez dans un moment. En
+                attendant, les{" "}
+                <Link href="/droits" className="font-medium underline hover:text-midnight-900">
+                  fiches pratiques
+                </Link>{" "}
+                restent consultables sans limite.
+              </p>
             </div>
           )}
           {error && (

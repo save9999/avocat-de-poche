@@ -1,5 +1,13 @@
 /**
- * Rate-limiting par IP — 20 requêtes / heure.
+ * Rate-limiting par IP — protège le quota Gemini free tier partagé par tous.
+ *
+ * Après la suppression de l'appel « specialty » automatique, 1 requête
+ * /api/chat = au plus 1 appel LLM : la limite se lit donc directement en
+ * « tours de conversation par heure ».
+ *
+ * Configuration (optionnelle) :
+ *   • RATE_LIMIT_MAX_REQUESTS    — défaut 20 requêtes / fenêtre
+ *   • RATE_LIMIT_WINDOW_SECONDS  — défaut 3600 (1 heure)
  *
  * Stratégie :
  *   • Si UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN sont définis,
@@ -8,12 +16,23 @@
  *   • Sinon, fallback in-memory (Map) — fonctionnel en développement ou
  *     sur un déploiement single-instance. ATTENTION : non partagé entre
  *     réplicas Vercel / Edge ; préférer Upstash en prod.
+ *   • Si Upstash est configuré mais injoignable, on retombe sur le compteur
+ *     in-memory (fail-soft) : une limite par réplique, imparfaite mais non
+ *     nulle — jamais de fail-open total, jamais de 500 pour l'utilisateur.
  */
 
 import "server-only";
 
-const WINDOW_SECONDS = 3600; // 1 heure
-const MAX_REQUESTS = 20;
+function maxRequests(): number {
+  const n = Number(process.env.RATE_LIMIT_MAX_REQUESTS);
+  return Number.isFinite(n) && n > 0 ? n : 20;
+}
+
+/** Fenêtre en secondes — exportée pour l'en-tête Retry-After de la route. */
+export function windowSeconds(): number {
+  const n = Number(process.env.RATE_LIMIT_WINDOW_SECONDS);
+  return Number.isFinite(n) && n > 0 ? n : 3600;
+}
 
 // ─── Fallback in-memory ───────────────────────────────────────────────────────
 
@@ -28,12 +47,12 @@ function inMemoryCheck(ip: string): { allowed: boolean; remaining: number } {
   const now = Date.now();
   let win = inMemoryStore.get(ip);
   if (!win || now > win.resetAt) {
-    win = { count: 0, resetAt: now + WINDOW_SECONDS * 1000 };
+    win = { count: 0, resetAt: now + windowSeconds() * 1000 };
     inMemoryStore.set(ip, win);
   }
   win.count += 1;
-  const allowed = win.count <= MAX_REQUESTS;
-  return { allowed, remaining: Math.max(0, MAX_REQUESTS - win.count) };
+  const allowed = win.count <= maxRequests();
+  return { allowed, remaining: Math.max(0, maxRequests() - win.count) };
 }
 
 // ─── Upstash Redis ────────────────────────────────────────────────────────────
@@ -46,28 +65,34 @@ async function upstashCheck(ip: string): Promise<{ allowed: boolean; remaining: 
   // INCR + EXPIRE dans un pipeline atomique
   const pipeline = [
     ["INCR", key],
-    ["EXPIRE", key, String(WINDOW_SECONDS), "NX"], // expire uniquement si non déjà défini
+    ["EXPIRE", key, String(windowSeconds()), "NX"], // expire uniquement si non déjà défini
   ];
 
-  const res = await fetch(`${url}/pipeline`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(pipeline),
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${url}/pipeline`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(pipeline),
+    });
+  } catch (err) {
+    // Panne réseau Upstash : fail-soft vers le compteur local, pas de 500.
+    console.warn("[rateLimit] Upstash injoignable, fallback in-memory :", (err as Error).message);
+    return inMemoryCheck(ip);
+  }
 
   if (!res.ok) {
-    // Si Upstash est injoignable, on laisse passer (fail-open) plutôt que bloquer.
-    console.warn("[rateLimit] Upstash indisponible, fail-open.");
-    return { allowed: true, remaining: MAX_REQUESTS };
+    console.warn(`[rateLimit] Upstash ${res.status}, fallback in-memory.`);
+    return inMemoryCheck(ip);
   }
 
   const data = (await res.json()) as [{ result: number }, unknown];
   const count = data[0]?.result ?? 1;
-  const allowed = count <= MAX_REQUESTS;
-  return { allowed, remaining: Math.max(0, MAX_REQUESTS - count) };
+  const allowed = count <= maxRequests();
+  return { allowed, remaining: Math.max(0, maxRequests() - count) };
 }
 
 // ─── Export principal ─────────────────────────────────────────────────────────
