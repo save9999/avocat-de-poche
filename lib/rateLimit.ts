@@ -22,6 +22,7 @@
  */
 
 import "server-only";
+import { fetchWithTimeout } from "./fetchTimeout";
 
 function maxRequests(): number {
   const n = Number(process.env.RATE_LIMIT_MAX_REQUESTS);
@@ -70,16 +71,23 @@ async function upstashCheck(ip: string): Promise<{ allowed: boolean; remaining: 
 
   let res: Response;
   try {
-    res = await fetch(`${url}/pipeline`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
+    // Ce contrôle passe avant tout le reste de la requête : un Upstash qui
+    // resterait bloqué (sans même répondre par une erreur) figerait chaque
+    // requête /api/chat indéfiniment. Timeout dur pour ne jamais en dépendre.
+    res = await fetchWithTimeout(
+      `${url}/pipeline`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(pipeline),
       },
-      body: JSON.stringify(pipeline),
-    });
+      3000,
+    );
   } catch (err) {
-    // Panne réseau Upstash : fail-soft vers le compteur local, pas de 500.
+    // Panne réseau ou timeout Upstash : fail-soft vers le compteur local, pas de 500.
     console.warn("[rateLimit] Upstash injoignable, fallback in-memory :", (err as Error).message);
     return inMemoryCheck(ip);
   }

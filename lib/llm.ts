@@ -4,6 +4,8 @@
 // Le "thinking" est désactivé (thinkingBudget 0) : le contexte juridique est déjà
 // fourni par le RAG, on privilégie une réponse rapide et directe.
 
+import { fetchWithTimeout } from "./fetchTimeout";
+
 // Le free tier Gemini renvoie fréquemment des 503 « high demand » par à-coups.
 // On enchaîne plusieurs modèles en repli, chacun avec un retry court (le 503 se
 // résout généralement en quelques secondes). Les variantes -lite ont des quotas
@@ -17,10 +19,20 @@ const MODELS = (
   .split(",")
   .map((m) => m.trim())
   .filter(Boolean);
-const MAX_RETRY_PER_MODEL = 4;
+// Budget serré à dessein : ceci répond à une requête HTTP synchrone (l'utilisateur
+// attend dans le chat). Un budget trop généreux, multiplié par jusqu'à 4 modèles
+// chaînés, risque de dépasser le timeout de la fonction serverless (Vercel) — la
+// requête serait alors tuée par la plateforme AVANT que le fallback ne s'exécute,
+// ce qui ressemble pour l'utilisateur à une application qui ne répond plus.
+const MAX_RETRY_PER_MODEL = 2;
 // Un 429 de quota journalier ne se résout pas en quelques secondes : un seul
 // retry, puis on passe au modèle suivant de la chaîne.
 const MAX_RETRY_429 = 1;
+// Timeout dur par tentative réseau : si Gemini ne répond pas du tout (plutôt
+// qu'une erreur explicite), on n'attend pas indéfiniment. Avec jusqu'à 4
+// modèles chaînés, un budget trop long ferait dépasser le timeout de la
+// fonction serverless bien avant que le fallback ne s'exécute.
+const FETCH_TIMEOUT_MS = 8000;
 
 export interface LlmMessage {
   role: "user" | "assistant";
@@ -42,21 +54,29 @@ async function callModel(
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
   let res: Response;
   try {
-    res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
+    res = await fetchWithTimeout(
+      url,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      },
+      FETCH_TIMEOUT_MS,
+    );
   } catch (err) {
-    if (retry < 2) {
-      await sleep(800 * (retry + 1));
+    // Un timeout (AbortError) signifie que Gemini ne répond pas du tout sur ce
+    // modèle : pas la peine de réessayer au même endroit, on passe directement
+    // au modèle suivant de la chaîne plutôt que de reproduire l'attente.
+    const isTimeout = err instanceof Error && err.name === "AbortError";
+    if (!isTimeout && retry < 1) {
+      await sleep(800);
       return callModel(model, apiKey, body, retry + 1);
     }
     throw err;
   }
   const maxRetry = res.status === 429 ? MAX_RETRY_429 : MAX_RETRY_PER_MODEL;
   if ((res.status === 429 || res.status >= 500) && retry < maxRetry) {
-    await sleep(1500 * (retry + 1)); // backoff linéaire court (503 transitoire)
+    await sleep(800 * (retry + 1)); // backoff linéaire court (503 transitoire)
     return callModel(model, apiKey, body, retry + 1);
   }
   if (!res.ok) {

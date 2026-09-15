@@ -5,6 +5,15 @@
 // entière en simultané, contrairement à Voyage (3 RPM / 10K TPM).
 // taskType distingue RETRIEVAL_QUERY (recherche) et RETRIEVAL_DOCUMENT
 // (ingestion) pour une meilleure pertinence sémantique.
+//
+// Deux profils de résilience cohabitent :
+//   - embedQuery (chemin live, /api/chat) : une requête HTTP synchrone attend
+//     la réponse — budget de retry serré pour ne jamais risquer de dépasser
+//     le timeout de la fonction serverless.
+//   - embedBatch (scripts d'ingestion hors-ligne) : peut se permettre d'être
+//     patient face au rate limit, un run dure déjà plusieurs minutes.
+
+import { fetchWithTimeout } from "./fetchTimeout";
 
 const GEMINI_MODEL = "gemini-embedding-001";
 const GEMINI_BATCH_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:batchEmbedContents`;
@@ -38,9 +47,38 @@ interface GeminiBatchResponse {
   embeddings: Array<{ values: number[] }>;
 }
 
+interface RetryPolicy {
+  fetchTimeoutMs: number;
+  maxNetworkRetry: number;
+  maxRateLimitRetry: number;
+  rateLimitWaitMs: (retry: number) => number;
+}
+
+// Chemin live (/api/chat, via embedQuery) : une requête HTTP synchrone attend
+// la réponse. Budget serré pour ne jamais risquer de dépasser le timeout de
+// la fonction serverless — un échec ici dégrade proprement (RAG sans
+// résultats), pas la peine d'insister longtemps.
+const LIVE_POLICY: RetryPolicy = {
+  fetchTimeoutMs: 6000,
+  maxNetworkRetry: 1,
+  maxRateLimitRetry: 1,
+  rateLimitWaitMs: () => 1000,
+};
+
+// Chemin ingestion (scripts hors-ligne, via embedBatch) : un run dure déjà
+// plusieurs minutes, on peut se permettre d'être patient face au rate limit
+// free tier plutôt que de faire échouer tout le lot.
+const BATCH_POLICY: RetryPolicy = {
+  fetchTimeoutMs: 30000,
+  maxNetworkRetry: 3,
+  maxRateLimitRetry: 7,
+  rateLimitWaitMs: (retry) => Math.min(60000, 2000 * 2 ** retry),
+};
+
 async function callGemini(
   inputs: string[],
   taskType: "RETRIEVAL_QUERY" | "RETRIEVAL_DOCUMENT",
+  policy: RetryPolicy,
   retry = 0,
 ): Promise<number[][]> {
   const apiKey = getApiKey();
@@ -55,23 +93,28 @@ async function callGemini(
 
   let res: Response;
   try {
-    res = await fetch(`${GEMINI_BATCH_URL}?key=${apiKey}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
+    res = await fetchWithTimeout(
+      `${GEMINI_BATCH_URL}?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      },
+      policy.fetchTimeoutMs,
+    );
   } catch (err) {
-    // Erreur réseau transitoire → quelques retries courts (le RAG dégrade sinon).
-    if (retry < 3) {
+    // Un timeout (AbortError) signifie que Gemini ne répond pas du tout : pas
+    // la peine de réessayer immédiatement au même endroit.
+    const isTimeout = err instanceof Error && err.name === "AbortError";
+    if (!isTimeout && retry < policy.maxNetworkRetry) {
       await new Promise((r) => setTimeout(r, 1000 * (retry + 1)));
-      return callGemini(inputs, taskType, retry + 1);
+      return callGemini(inputs, taskType, policy, retry + 1);
     }
     throw err;
   }
-  if ((res.status === 429 || res.status >= 500) && retry < 7) {
-    const wait = Math.min(60000, 2000 * 2 ** retry);
-    await new Promise((r) => setTimeout(r, wait));
-    return callGemini(inputs, taskType, retry + 1);
+  if ((res.status === 429 || res.status >= 500) && retry < policy.maxRateLimitRetry) {
+    await new Promise((r) => setTimeout(r, policy.rateLimitWaitMs(retry)));
+    return callGemini(inputs, taskType, policy, retry + 1);
   }
   if (!res.ok) {
     throw new Error(`Gemini ${res.status} — ${(await res.text()).slice(0, 300)}`);
@@ -81,7 +124,7 @@ async function callGemini(
 }
 
 export async function embedQuery(query: string): Promise<number[]> {
-  const [embedding] = await callGemini([query], "RETRIEVAL_QUERY");
+  const [embedding] = await callGemini([query], "RETRIEVAL_QUERY", LIVE_POLICY);
   return embedding;
 }
 
@@ -100,7 +143,7 @@ export async function embedBatch(texts: string[]): Promise<number[][]> {
       tokens += t;
       j++;
     }
-    out.push(...(await callGemini(texts.slice(i, j), "RETRIEVAL_DOCUMENT")));
+    out.push(...(await callGemini(texts.slice(i, j), "RETRIEVAL_DOCUMENT", BATCH_POLICY)));
     i = j;
     if (i < texts.length) await new Promise((r) => setTimeout(r, subbatchPauseMs()));
   }

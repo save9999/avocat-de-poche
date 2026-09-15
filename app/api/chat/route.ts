@@ -17,6 +17,12 @@ import { lireCache, ecrireCache } from "@/lib/chatCache";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+// Filet de sécurité : avec les budgets de retry serrés de lib/llm.ts et
+// lib/embeddings.ts, le pire cas (4 modèles Gemini qui timeoutent tous) reste
+// sous la barre des 60s. Sans cette déclaration, Vercel appliquerait sa durée
+// par défaut (plus courte) et tuerait la requête avant que le fallback ne
+// s'exécute — ce qui se manifeste pour l'utilisateur comme une app figée.
+export const maxDuration = 60;
 
 // ─── Validation Zod ──────────────────────────────────────────────────────────
 

@@ -56,7 +56,7 @@ const DOMAIN_RULES: Array<{ domain: string; keywords: RegExp }> = [
   { domain: "logement", keywords: /logement|bail|locataire|bailleur|loyer|expulsion|copropri[ée]t[ée]|h[ée]bergement/i },
   { domain: "consommation", keywords: /consommation|consommateur|achat|garantie|r[ée]tractation|d[ée]marchage|cr[ée]dit|surendettement|litige.*vendeur/i },
   { domain: "famille", keywords: /famille|mariage|divorce|pacs|pension|parentale|filiation|succession|enfant|adoption|tutelle/i },
-  { domain: "penal", keywords: /justice|infraction|peine|d[ée]lit|plainte|victime|violence|agression|vol|escroquerie|harc[èe]lement/i },
+  { domain: "penal", keywords: /justice|infraction|peine|d[ée]lit|plainte|victime|violence|agression|vol|escroquerie|harc[èe]lement|contr[ôo]le d.identit[ée]|garde [àa] vue|interpellation|gendarmerie|palpation|fouille|arrestation|d[ée]tention provisoire/i },
   { domain: "numerique", keywords: /num[ée]rique|internet|donn[ée]es personnelles|cnil|r[ée]seaux sociaux|en ligne/i },
 ];
 
