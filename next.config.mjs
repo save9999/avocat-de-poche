@@ -22,8 +22,10 @@ const nextConfig = {
               "img-src 'self' data: blob:",
               // Polices
               "font-src 'self'",
-              // Connexions API : même origine + Supabase + Anthropic
-              "connect-src 'self' https://*.supabase.co https://api.anthropic.com https://*.upstash.io",
+              // Connexions API : même origine uniquement — les appels externes
+              // (Gemini, Neon, Upstash) sont tous côté serveur, hors périmètre
+              // de la CSP navigateur.
+              "connect-src 'self'",
               // Frames interdites
               "frame-src 'none'",
               "frame-ancestors 'none'",

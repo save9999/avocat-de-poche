@@ -13,7 +13,7 @@
  * Pré-requis :
  *   1. Télécharger + dézipper l'archive : `npm run download:sp`
  *      (remplit ~/sp-data/fiches/*.xml)
- *   2. .env.local : VOYAGE_API_KEY + DATABASE_URL
+ *   2. .env.local : GEMINI_API_KEY + DATABASE_URL
  *
  * Usage :
  *   npm run ingest:sp                      → toutes les fiches F + R
@@ -22,7 +22,7 @@
  *   npm run ingest:sp -- --prefix F        → fiches F uniquement
  *
  * Le script est resume-safe : une relance saute les fiches déjà en base
- * (utile si le quota Voyage coupe en cours de route).
+ * (utile si le quota free tier Gemini coupe en cours de route).
  */
 
 import { promises as fs } from "node:fs";
@@ -56,7 +56,7 @@ const DOMAIN_RULES: Array<{ domain: string; keywords: RegExp }> = [
   { domain: "logement", keywords: /logement|bail|locataire|bailleur|loyer|expulsion|copropri[ée]t[ée]|h[ée]bergement/i },
   { domain: "consommation", keywords: /consommation|consommateur|achat|garantie|r[ée]tractation|d[ée]marchage|cr[ée]dit|surendettement|litige.*vendeur/i },
   { domain: "famille", keywords: /famille|mariage|divorce|pacs|pension|parentale|filiation|succession|enfant|adoption|tutelle/i },
-  { domain: "penal", keywords: /justice|infraction|peine|d[ée]lit|plainte|victime|violence|agression|vol|escroquerie|harc[èe]lement/i },
+  { domain: "penal", keywords: /justice|infraction|peine|d[ée]lit|plainte|victime|violence|agression|vol|escroquerie|harc[èe]lement|contr[ôo]le d.identit[ée]|garde [àa] vue|interpellation|gendarmerie|palpation|fouille|arrestation|d[ée]tention provisoire/i },
   { domain: "numerique", keywords: /num[ée]rique|internet|donn[ée]es personnelles|cnil|r[ée]seaux sociaux|en ligne/i },
 ];
 

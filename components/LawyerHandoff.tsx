@@ -9,14 +9,12 @@ import { type DomainId } from "@/data/domains";
 interface LawyerHandoffProps {
   conversation: ChatMessageData[];
   domain: DomainId | null;
-  specialtyLabel?: string | null;
   onOpenPlan: () => void;
 }
 
 export function LawyerHandoff({
   conversation,
   domain,
-  specialtyLabel,
   onOpenPlan,
 }: LawyerHandoffProps) {
   const [open, setOpen] = useState(false);
@@ -106,20 +104,9 @@ export function LawyerHandoff({
               Faites relire votre dossier par un vrai avocat
             </h3>
             <p className="mt-2 text-sm leading-relaxed text-midnight-700">
-              {specialtyLabel ? (
-                <>
-                  Nous préparons un <strong>dossier pré-analysé</strong> reprenant
-                  les faits, leur qualification juridique et les pièces à
-                  rassembler — prêt à être transmis à un avocat en{" "}
-                  <span className="font-semibold">{specialtyLabel}</span>.
-                </>
-              ) : (
-                <>
-                  Nous préparons un <strong>dossier pré-analysé</strong> reprenant
-                  les faits, leur qualification juridique et les pièces à
-                  rassembler — prêt à être transmis à un avocat partenaire.
-                </>
-              )}
+              Nous préparons un <strong>dossier pré-analysé</strong> reprenant
+              les faits, leur qualification juridique et les pièces à
+              rassembler — prêt à être transmis à un avocat partenaire.
             </p>
             <div className="mt-4 flex flex-wrap items-center gap-3">
               <button

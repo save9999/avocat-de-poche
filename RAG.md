@@ -1,15 +1,18 @@
-# RAG juridique — ingestion Légifrance
+# RAG juridique — base, ingestion, vectorisation
 
 L'app utilise un **RAG** (Retrieval Augmented Generation) basé sur :
 
-- **Supabase Postgres + pgvector** : stockage des articles + embeddings.
-- **OpenAI `text-embedding-3-small`** (1536 dim) : embeddings.
-- **Claude Sonnet 4.6** : génération.
+- **Neon Postgres + pgvector** : stockage des articles/fiches + embeddings.
+- **Gemini `gemini-embedding-001`** (768 dim, free tier) : embeddings.
+- **Gemini `gemini-2.5-flash`** (+ chaîne de repli `flash-lite` / `2.0`) : génération.
 
 À chaque message utilisateur, `/api/chat` :
-1. Calcule l'embedding de la question.
-2. Interroge la RPC `match_articles` (top 8, filtrable par `domain` ou `code_slug`).
-3. Injecte les articles trouvés dans le system prompt avant l'appel Claude.
+1. Calcule l'embedding de la question (768 dim).
+2. Interroge la fonction SQL `match_articles` (top 8, filtrable par `domain` ou `code_slug`).
+3. Injecte les articles trouvés dans le system prompt avant l'appel Gemini.
+
+Le tout tient dans les **free tiers** : le throttling d'ingestion (budget de tokens
+par sous-lot + pauses) est intégré à `lib/embeddings.ts`.
 
 ---
 
@@ -18,109 +21,79 @@ L'app utilise un **RAG** (Retrieval Augmented Generation) basé sur :
 Copier `.env.example` → `.env.local` et renseigner :
 
 ```
-ANTHROPIC_API_KEY=…
-OPENAI_API_KEY=…
-NEXT_PUBLIC_SUPABASE_URL=https://lolbwvqmyutlactgevue.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_…
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOi…   # ⚠️ uniquement pour l'ingestion locale
+GEMINI_API_KEY=…       # https://aistudio.google.com/apikey (gratuit)
+DATABASE_URL=…         # chaîne de connexion Neon (sslmode=require)
 ```
 
-La `service_role` se récupère sur https://supabase.com/dashboard/project/lolbwvqmyutlactgevue/settings/api → **service_role** (secret).
+## 2. Provisionner le schéma
 
----
-
-## 2. Télécharger le dump Légifrance
-
-Le **DILA** publie un dump complet quotidien du droit français consolidé (LEGI) :
-
-```
-https://echanges.dila.gouv.fr/OPENDATA/LEGI/
-```
-
-1. Télécharger le dernier `LEGI_YYYYMMDD-HHMMSS.tar.gz` (~5 Go compressé).
-2. Décompresser dans `~/legi/` :
+Sur une base Neon vierge :
 
 ```bash
-mkdir -p ~/legi
-tar -xzf LEGI_*.tar.gz -C ~/legi/
+psql "$DATABASE_URL" -f migrations/0001_schema.sql
 ```
 
-L'arborescence ressemble à :
+Le fichier est idempotent (ré-exécutable). Il crée `legal_articles`
+(embedding `vector(768)`), les fonctions `match_articles` et
+`articles_missing_embedding`, la vue `legal_articles_stats` et la table
+`chat_cache`.
 
-```
-~/legi/global/code_et_TNC_en_vigueur/code_en_vigueur/LEGI/TEXT_LEGITEXT…/article/…/article_LEGIARTI….xml
-```
+## 3. Ingestion des fiches Service-Public.fr (pipeline vivant)
 
----
-
-## 3. Lancer l'ingestion
+Source officielle DILA (licence ouverte v2.0, mise à jour quotidienne) — de
+l'information juridique déjà vulgarisée, complémentaire de la loi brute.
 
 ```bash
-npm install
-npm run ingest -- --dir ~/legi
+npm run download:sp    # télécharge + dézippe ~5500 fiches XML dans ~/sp-data/fiches/
+npm run ingest:sp      # parse + embed + upsert (resume-safe)
 ```
 
-Options :
+Options : `-- --dry-run` (parse seulement), `-- --limit 50`, `-- --prefix F`.
 
-| Flag | Description |
-|---|---|
-| `--dir <path>` | Racine du dump décompressé (obligatoire). |
-| `--codes code-civil,code-penal` | Limiter à certains codes (slug `lower-kebab`). |
-| `--limit 5000` | Limiter le nombre d'articles ingérés (utile pour tests). |
-| `--dry-run` | Parse + embed mais n'insère pas dans Supabase. |
+Le script est **resume-safe** : si le quota free tier Gemini coupe
+l'exécution, une relance reprend là où elle s'est arrêtée. Par défaut il
+force un rythme compatible free tier (budget 25 000 tokens + pause 55 s
+entre sous-lots) ; `-- --fast` désactive ce bridage (nécessite la
+facturation Gemini).
 
-Le script :
+`scripts/auto-ingest.sh` + `scripts/com.avocatpoche.ingest.plist` montrent
+comment planifier l'ingestion quotidienne (macOS LaunchAgent) après le reset
+du quota gratuit (minuit heure Pacifique ≈ 9 h heure française). Adapter les
+chemins à votre machine.
 
-- est **idempotent** : ré-exécution → upsert sur `cid`.
-- batch les embeddings (96 articles à la fois).
-- batch les upserts (200 lignes à la fois).
-- coûte **~5 USD** pour un dump LEGI complet (~250 000 articles).
-- prend **~3 à 5 heures** sur ADSL.
-
-### Test rapide (100 articles seulement)
+## 4. (Re)vectorisation
 
 ```bash
-npm run ingest -- --dir ~/legi --codes code-civil --limit 100
+npm run reembed
 ```
 
----
+Ré-embedde toutes les lignes dont `embedding` est `NULL` (batch de 50,
+resume-safe). À utiliser après un changement de modèle d'embedding ou une
+ingestion interrompue.
 
-## 4. Vérifier l'ingestion
-
-Côté Supabase :
+## 5. Vérifier l'état de la base
 
 ```sql
 select * from public.legal_articles_stats;
 ```
 
-Ou via le client :
-
-```bash
-npx tsx scripts/check-rag.ts "que faire en cas de licenciement abusif ?"
-```
-*(script optionnel à créer si besoin)*
-
----
-
-## 5. Ré-ingestion incrémentale
-
-La DILA publie un dump complet par jour. Pour une mise à jour mensuelle :
-
-```bash
-npm run ingest -- --dir ~/legi-2026-06-01
-```
-
-Les `cid` inchangés sont mis à jour en place ; les nouveaux articles sont insérés ; les abrogés gardent `etat <> 'VIGUEUR'` et sont filtrés par la RPC.
-
----
-
 ## 6. Index ivfflat — tuning
 
-L'index `legal_articles_embedding_idx` est créé avec `lists = 200`, optimal pour ~50k–500k lignes. Pour beaucoup plus, augmenter `lists` (règle : `sqrt(rows)`).
+L'index `legal_articles_embedding_idx` est créé avec `lists = 200`, optimal
+pour ~50k–500k lignes. Au-delà, augmenter `lists` (règle : `sqrt(rows)`).
 
-Pour reconstruire l'index après une grosse ingestion :
+Après une grosse ingestion :
 
 ```sql
 reindex index public.legal_articles_embedding_idx;
 analyze public.legal_articles;
 ```
+
+---
+
+## Scripts hérités (`scripts/legacy/`)
+
+Les anciens pipelines (dump LEGI complet embeddé via OpenAI 1536 dim,
+dataset HuggingFace embeddé via Voyage 1024 dim) sont conservés pour
+référence dans `scripts/legacy/` mais sont **incompatibles** avec le schéma
+courant (768 dim) — voir `scripts/legacy/README.md`.

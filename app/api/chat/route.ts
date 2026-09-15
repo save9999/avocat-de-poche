@@ -12,10 +12,17 @@ import {
   formatArticlesForPrompt,
   type RetrievedArticle,
 } from "@/lib/rag";
-import { checkRateLimit } from "@/lib/rateLimit";
+import { checkRateLimit, windowSeconds } from "@/lib/rateLimit";
+import { lireCache, ecrireCache } from "@/lib/chatCache";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+// Filet de sécurité : avec les budgets de retry serrés de lib/llm.ts et
+// lib/embeddings.ts, le pire cas (4 modèles Gemini qui timeoutent tous) reste
+// sous la barre des 60s. Sans cette déclaration, Vercel appliquerait sa durée
+// par défaut (plus courte) et tuerait la requête avant que le fallback ne
+// s'exécute — ce qui se manifeste pour l'utilisateur comme une app figée.
+export const maxDuration = 60;
 
 // ─── Validation Zod ──────────────────────────────────────────────────────────
 
@@ -112,16 +119,15 @@ export async function POST(req: NextRequest) {
       { error: "Trop de requêtes. Veuillez patienter avant de réessayer." },
       {
         status: 429,
-        headers: { "X-RateLimit-Remaining": "0", "Retry-After": "3600" },
+        headers: { "X-RateLimit-Remaining": "0", "Retry-After": String(windowSeconds()) },
       }
     );
   }
 
+  // Pas de 500 si la clé manque : chaque mode dégrade proprement (fallback
+  // « sources officielles » pour le chat, message de saturation pour le reste).
   if (!process.env.GEMINI_API_KEY) {
-    return NextResponse.json(
-      { error: "GEMINI_API_KEY manquant côté serveur." },
-      { status: 500 }
-    );
+    console.warn("[api/chat] GEMINI_API_KEY manquant — mode dégradé.");
   }
 
   // ─── Validation Zod ───────────────────────────────────────────────────────
@@ -144,6 +150,24 @@ export async function POST(req: NextRequest) {
   try {
     // ─── Mode CHAT : RAG + LLM ──────────────────────────────────────────
     if (mode === "chat") {
+      // Cache « premier tour » : uniquement quand la conversation se réduit à
+      // une seule question utilisateur (exemples cliquables, arrivées SEO).
+      // Un hit économise l'appel Gemini ET l'embedding. Les tours suivants
+      // contiennent du contexte personnel et ne sont jamais cachés.
+      const userMessages = messages.filter((m) => m.role === "user");
+      const premierTour =
+        userMessages.length === 1 && !messages.some((m) => m.role === "assistant");
+      if (premierTour) {
+        const enCache = await lireCache(domain, userMessages[0].content);
+        if (enCache) {
+          return NextResponse.json({
+            reply: enCache.reply,
+            sources: enCache.sources,
+            cached: true,
+          });
+        }
+      }
+
       let articles: RetrievedArticle[] = [];
       try {
         const query = ragQueryFromMessages(messages) || lastUserMessage(messages) || "";
@@ -163,23 +187,32 @@ export async function POST(req: NextRequest) {
       // renvoie PAS d'erreur — on construit une réponse de secours à partir des
       // sources officielles déjà trouvées. L'utilisateur a toujours une réponse.
       let reply: string;
+      let degraded = false;
       try {
         reply = await generateText(buildSystemPrompt(articles), messages, 1500);
-        if (!reply.trim()) reply = fallbackReply(articles);
+        if (!reply.trim()) {
+          reply = fallbackReply(articles);
+          degraded = true;
+        }
       } catch (llmErr) {
         console.warn("[api/chat] LLM indisponible :", (llmErr as Error).message);
         reply = fallbackReply(articles);
+        degraded = true;
       }
 
-      return NextResponse.json({
-        reply,
-        sources: articles.map((a) => ({
-          reference: a.reference,
-          code: a.code,
-          similarity: a.similarity,
-          url: a.source_url,
-        })),
-      });
+      const sources = articles.map((a) => ({
+        reference: a.reference,
+        code: a.code,
+        similarity: a.similarity,
+        url: a.source_url,
+      }));
+
+      // On ne met en cache que les vraies réponses rédigées, jamais le fallback.
+      if (premierTour && !degraded) {
+        await ecrireCache(domain, userMessages[0].content, reply, sources);
+      }
+
+      return NextResponse.json({ reply, sources, ...(degraded ? { degraded: true } : {}) });
     }
 
     // ─── Mode LETTER : rédaction de lettre formelle ────────────────────
@@ -201,7 +234,10 @@ export async function POST(req: NextRequest) {
         letter = SATURATED_MSG;
       }
 
-      return NextResponse.json({ letter });
+      return NextResponse.json({
+        letter,
+        ...(letter === SATURATED_MSG ? { degraded: true } : {}),
+      });
     }
 
     // ─── Mode SPECIALTY : routing avocat ──────────────────────────────
@@ -215,7 +251,7 @@ export async function POST(req: NextRequest) {
         raw = await generateText(
           buildSpecialtyPrompt(ctx, domain),
           [{ role: "user", content: "Analyse et renvoie le JSON de spécialité." }],
-          400,
+          250,
         );
       } catch (e) {
         console.warn("[api/chat specialty] LLM indisponible :", (e as Error).message);
@@ -280,6 +316,7 @@ export async function POST(req: NextRequest) {
           similarity: a.similarity,
           url: a.source_url,
         })),
+        ...(summary === SATURATED_MSG ? { degraded: true } : {}),
       });
     }
 

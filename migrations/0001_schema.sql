@@ -1,6 +1,11 @@
 -- ┌─────────────────────────────────────────────────────────────────────────┐
--- │ RAG juridique : table legal_articles + embeddings + recherche vectorielle│
--- │ Source : dumps DILA LEGI (Légifrance)                                   │
+-- │ Schéma canonique Avocat de Poche — Neon Postgres + pgvector             │
+-- │                                                                         │
+-- │ Embeddings : Gemini gemini-embedding-001, 768 dimensions                │
+-- │ (cf. lib/embeddings.ts). Idempotent : ré-exécutable sans risque.        │
+-- │                                                                         │
+-- │ Provisioning d'une base vierge :                                        │
+-- │   psql "$DATABASE_URL" -f migrations/0001_schema.sql                    │
 -- └─────────────────────────────────────────────────────────────────────────┘
 
 create extension if not exists vector;
@@ -8,19 +13,19 @@ create extension if not exists vector;
 -- ── Table principale ─────────────────────────────────────────────────────
 create table if not exists public.legal_articles (
   id           bigserial primary key,
-  cid          text unique,                       -- identifiant chronologique Légifrance (LEGIARTI…)
-  code         text not null,                     -- libellé du code ("Code civil")
-  code_slug    text not null,                     -- slug ("code-civil")
-  reference    text not null,                     -- "Article 1240"
+  cid          text unique,                       -- identifiant chronologique (LEGIARTI… / fiche F…)
+  code         text not null,                     -- libellé du code ("Code civil", "Service-Public.fr")
+  code_slug    text not null,                     -- slug ("code-civil", "service-public")
+  reference    text not null,                     -- "Article 1240" / titre de fiche
   title        text,                              -- titre court / résumé
-  content      text not null,                     -- texte intégral de l'article
+  content      text not null,                     -- texte intégral
   date_debut   date,
   date_fin     date,
   etat         text not null default 'VIGUEUR',   -- VIGUEUR | ABROGE | MODIFIE_MORT_NE …
   domains      text[] not null default '{}',     -- ['travail','famille',…]
   hierarchy    jsonb,                             -- {livre,titre,chapitre,section,sous_section}
-  source_url   text,                              -- lien vers Légifrance
-  embedding    vector(1536),                      -- OpenAI text-embedding-3-small
+  source_url   text,                              -- lien vers la source officielle
+  embedding    vector(768),                       -- Gemini gemini-embedding-001 (768 dim)
   token_count  int,
   created_at   timestamptz not null default now(),
   updated_at   timestamptz not null default now()
@@ -47,9 +52,9 @@ create trigger set_legal_articles_updated_at
   before update on public.legal_articles
   for each row execute function public.set_updated_at();
 
--- ── RPC de recherche vectorielle ────────────────────────────────────────
+-- ── Recherche vectorielle (appelée par lib/rag.ts) ──────────────────────
 create or replace function public.match_articles(
-  query_embedding vector(1536),
+  query_embedding vector(768),
   match_count     int     default 8,
   domain_filter   text    default null,
   code_filter     text    default null,
@@ -85,7 +90,23 @@ language sql stable as $$
   limit match_count;
 $$;
 
--- ── Stats utilitaires (lecture publique) ────────────────────────────────
+-- ── Lignes à (ré)embedder (appelée par scripts/reembed.ts) ──────────────
+create or replace function public.articles_missing_embedding(batch int default 50)
+returns table (
+  id         bigint,
+  reference  text,
+  code       text,
+  content    text
+)
+language sql stable as $$
+  select la.id, la.reference, la.code, la.content
+  from public.legal_articles la
+  where la.embedding is null
+  order by la.id
+  limit batch;
+$$;
+
+-- ── Stats utilitaires ───────────────────────────────────────────────────
 create or replace view public.legal_articles_stats as
   select
     code_slug,
@@ -99,21 +120,15 @@ create or replace view public.legal_articles_stats as
   group by code_slug, code
   order by total_articles desc;
 
--- ── RLS ────────────────────────────────────────────────────────────────
-alter table public.legal_articles enable row level security;
+-- ── Cache des réponses « premier tour » (appelé par lib/chatCache.ts) ────
+-- Économise un appel Gemini + un embedding sur les questions fréquentes
+-- (exemples cliquables, arrivées SEO). Purge par TTL côté lecture.
+create table if not exists public.chat_cache (
+  cache_key   text primary key,                   -- sha256(domaine|question normalisée)
+  domain      text,
+  reply       text not null,
+  sources     jsonb not null default '[]',
+  created_at  timestamptz not null default now()
+);
 
-drop policy if exists "legal_articles lisibles publiquement" on public.legal_articles;
-create policy "legal_articles lisibles publiquement"
-  on public.legal_articles
-  for select
-  to anon, authenticated
-  using (true);
-
--- Aucune politique d'INSERT/UPDATE/DELETE → seuls les jobs avec la
--- service_role_key (ingestion) peuvent écrire.
-
--- ── Permissions explicites sur la RPC ───────────────────────────────────
-grant execute on function public.match_articles(vector(1536), int, text, text, float)
-  to anon, authenticated, service_role;
-
-grant select on public.legal_articles_stats to anon, authenticated, service_role;
+create index if not exists chat_cache_created_idx on public.chat_cache (created_at);

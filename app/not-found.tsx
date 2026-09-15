@@ -4,7 +4,7 @@ import { ScaleIcon } from "@/components/ScaleIcon";
 
 export const metadata: Metadata = {
   title: "Page introuvable — 404",
-  description: "Cette page n'existe pas. Retournez à l'accueil ou accédez directement au chat juridique sur le harcèlement scolaire.",
+  description: "Cette page n'existe pas. Retournez à l'accueil ou posez directement votre question juridique (travail, logement, consommation, famille, pénal, harcèlement scolaire).",
 };
 
 export default function NotFound() {
@@ -14,7 +14,7 @@ export default function NotFound() {
         <div className="mx-auto flex max-w-4xl items-center px-6 py-4">
           <Link
             href="/"
-            className="flex items-center gap-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded-lg"
+            className="flex items-center gap-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass-500 focus-visible:ring-offset-2 rounded-lg"
             aria-label="Retour à l'accueil Avocat de Poche"
           >
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-midnight-900 text-white">
@@ -42,13 +42,13 @@ export default function NotFound() {
         <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
           <Link
             href="/"
-            className="rounded-xl bg-midnight-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-midnight-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+            className="rounded-xl bg-midnight-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-midnight-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass-500 focus-visible:ring-offset-2"
           >
             Retour à l'accueil
           </Link>
           <Link
             href="/chat"
-            className="rounded-xl border border-midnight-200 bg-white px-6 py-3 text-sm font-medium text-midnight-700 transition hover:border-midnight-300 hover:text-midnight-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+            className="rounded-xl border border-midnight-200 bg-white px-6 py-3 text-sm font-medium text-midnight-700 transition hover:border-midnight-300 hover:text-midnight-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brass-500 focus-visible:ring-offset-2"
           >
             Poser une question juridique
           </Link>
